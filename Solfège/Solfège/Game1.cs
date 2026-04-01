@@ -19,6 +19,9 @@ namespace Solfège
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
+        int check = 0;
+
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
