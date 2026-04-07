@@ -21,7 +21,7 @@ namespace Solfège
 
         int check = 0;
 
-
+        int check2 = 0;
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
