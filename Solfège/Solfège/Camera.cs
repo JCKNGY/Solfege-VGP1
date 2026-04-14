@@ -15,21 +15,58 @@ namespace Solfège
 {
     public class Camera
     {
-        public Vector2 Position { get; private set; }
-        public float Zoom { get; set; } = 1f;
-        public float Smoothing { get; set; } = 0.1f;
+        public Vector2 Position;
 
         private readonly int screenWidth;
         private readonly int screenHeight;
-        private Rectangle? worldBounds;
+        private readonly int mapWidth;
+        private readonly int mapHeight;
 
-        public Camera(int screenWidth, int screenHeight, Rectangle? worldBounds = null)
+        public Camera(int screenW, int screenH)
         {
-            this.screenWidth = screenWidth;
-            this.screenHeight = screenHeight;
-            this.worldBounds = worldBounds;
+            screenWidth = screenW;
+            screenHeight = screenH;
+            mapWidth = 1280;
+            mapHeight = 720;
         }
 
+        public void CenterOn(Vector2 playerPos, Vector2 playerSize)
+        {
+
+            Position.X = playerPos.X + playerSize.X / 2f - screenWidth / 2f;
+            Position.Y = playerPos.Y + playerSize.Y / 2f - screenHeight / 2f;
+
+
+            ClampToMap();
+        }
+
+        public void Update(Vector2 playerPos, Vector2 playerSize)
+        {
+            CenterOn(playerPos, playerSize);
+        }
+
+        private void ClampToMap()
+        {
+            if (Position.X < 0)
+            {
+                Position.X = 0;
+            }
+
+            if (Position.Y < 0)
+            {
+                Position.Y = 0;
+            }
+
+            if (Position.X > mapWidth - screenWidth)
+            {
+                Position.X = mapWidth - screenWidth;
+            }
+
+            if (Position.Y > mapHeight - screenHeight)
+            {
+                Position.Y = mapHeight - screenHeight;
+            }
+        }
     }
 
 }

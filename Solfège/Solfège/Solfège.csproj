@@ -63,6 +63,7 @@
     <Compile Include="Enemy.cs" />
     <Compile Include="GameStateManager.cs" />
     <Compile Include="InstrumentSpell.cs" />
+    <Compile Include="Map.cs" />
     <Compile Include="MetronomeSystem.cs" />
     <Compile Include="Projectile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -19,12 +19,20 @@ namespace Solfège
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        int check = 0;
+        private const int ScreenWidth = 1280;
+        private const int ScreenHeight = 720;
 
-        int check2 = 0;
+        private Conductor Conductor;
+        private Camera camera;
+
+        KeyboardState oldKb;
+
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferWidth = ScreenWidth;
+            graphics.PreferredBackBufferHeight = ScreenHeight;
             Content.RootDirectory = "Content";
         }
 
@@ -49,6 +57,12 @@ namespace Solfège
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            Conductor = new Conductor(Content, GraphicsDevice);
+            camera = new Camera(ScreenWidth, ScreenHeight);
+
+            Conductor.Position = new Vector2(1280 /2f, 720/ 2f);
+
+            camera.CenterOn(Conductor.Position, Conductor.Size);
 
             // TODO: use this.Content to load your game content here
         }
@@ -70,11 +84,17 @@ namespace Solfège
         protected override void Update(GameTime gameTime)
         {
             // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+            GamePadState gp = GamePad.GetState(PlayerIndex.One);
+            KeyboardState kb = Keyboard.GetState();
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || !oldKb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.Escape))
                 this.Exit();
 
             // TODO: Add your update logic here
 
+
+            Conductor.Update(gameTime, gp, kb);
+            camera.Update(Conductor.Position, Conductor.Size);
+            oldKb = kb;
             base.Update(gameTime);
         }
 
@@ -87,7 +107,10 @@ namespace Solfège
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             // TODO: Add your drawing code here
+            spriteBatch.Begin();
 
+            Conductor.Draw(spriteBatch, camera);
+            spriteBatch.End();
             base.Draw(gameTime);
         }
     }
