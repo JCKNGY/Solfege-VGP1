@@ -22,6 +22,7 @@ namespace Solfège
         private const int ScreenWidth = 1280;
         private const int ScreenHeight = 720;
 
+        private Map map;
         private Conductor Conductor;
         private Camera camera;
 
@@ -34,6 +35,7 @@ namespace Solfège
             graphics.PreferredBackBufferWidth = ScreenWidth;
             graphics.PreferredBackBufferHeight = ScreenHeight;
             Content.RootDirectory = "Content";
+            IsMouseVisible = true; 
         }
 
         /// <summary>
@@ -57,10 +59,11 @@ namespace Solfège
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            map = new Map(Content, GraphicsDevice);
             Conductor = new Conductor(Content, GraphicsDevice);
-            camera = new Camera(ScreenWidth, ScreenHeight);
+            camera = new Camera(ScreenWidth, ScreenHeight, map.MapWidthPixels, map.MapHeightPixels);
 
-            Conductor.Position = new Vector2(1280 /2f, 720/ 2f);
+            Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
 
             camera.CenterOn(Conductor.Position, Conductor.Size);
 
@@ -92,7 +95,7 @@ namespace Solfège
             // TODO: Add your update logic here
 
 
-            Conductor.Update(gameTime, gp, kb);
+            Conductor.Update(gameTime, gp, kb, map);
             camera.Update(Conductor.Position, Conductor.Size);
             oldKb = kb;
             base.Update(gameTime);
@@ -110,6 +113,7 @@ namespace Solfège
             spriteBatch.Begin();
 
             Conductor.Draw(spriteBatch, camera);
+
             spriteBatch.End();
             base.Draw(gameTime);
         }
