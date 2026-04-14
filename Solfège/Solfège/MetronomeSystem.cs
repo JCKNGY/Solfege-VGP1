@@ -14,6 +14,7 @@ namespace Solfège
 {
     class MetronomeSystem
     {
-        
+        Texture2D boxtexture;
+        Rectangle boxRect;
     }
 }
