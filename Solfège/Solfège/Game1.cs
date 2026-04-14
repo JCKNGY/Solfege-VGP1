@@ -24,6 +24,7 @@ namespace Solfège
 
         private Conductor Conductor;
         private Camera camera;
+        private MetronomeSystem metronome;
 
         KeyboardState oldKb;
 
@@ -59,6 +60,7 @@ namespace Solfège
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Conductor = new Conductor(Content, GraphicsDevice);
             camera = new Camera(ScreenWidth, ScreenHeight);
+            metronome= new MetronomeSystem(Content, GraphicsDevice);
 
             Conductor.Position = new Vector2(1280 /2f, 720/ 2f);
 
@@ -94,6 +96,7 @@ namespace Solfège
 
             Conductor.Update(gameTime, gp, kb);
             camera.Update(Conductor.Position, Conductor.Size);
+            metronome.Update(gameTime);
             oldKb = kb;
             base.Update(gameTime);
         }
@@ -108,7 +111,7 @@ namespace Solfège
 
             // TODO: Add your drawing code here
             spriteBatch.Begin();
-
+            metronome.Draw(spriteBatch);
             Conductor.Draw(spriteBatch, camera);
             spriteBatch.End();
             base.Draw(gameTime);
