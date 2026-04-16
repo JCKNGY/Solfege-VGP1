@@ -64,7 +64,6 @@ namespace Solfège
             
             Conductor = new Conductor(Content, GraphicsDevice);
             
-            camera = new Camera(ScreenWidth, ScreenHeight);
             metronome= new MetronomeSystem(Content, GraphicsDevice, 240);
 
             Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
