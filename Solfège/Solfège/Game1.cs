@@ -48,7 +48,7 @@ namespace Solfège
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-
+            camera = new Camera(ScreenWidth, ScreenHeight, map.MapWidthPixels, map.MapHeightPixels);
             base.Initialize();
         }
 
@@ -109,12 +109,13 @@ namespace Solfège
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.White);
 
             // TODO: Add your drawing code here
             spriteBatch.Begin();
             metronome.Draw(spriteBatch);
             Conductor.Draw(spriteBatch, camera);
+            map.Draw(spriteBatch, camera);
 
             spriteBatch.End();
             base.Draw(gameTime);
