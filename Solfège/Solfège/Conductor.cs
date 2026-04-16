@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 
-namespace Solfège   
+namespace Solfège
 {
-    class Conductor
+    public class Conductor
     {
 
         private Texture2D texture;
@@ -32,11 +25,11 @@ namespace Solfège
         public Conductor(ContentManager content, GraphicsDevice graphicsDevice)
         {
 
-            texture = content.Load<Texture2D>("sprites/white");
+            texture = content.Load<Texture2D>("sprites/ConductorFront");
             Size = new Vector2(texture.Width, texture.Height);
         }
 
-        public void Update(GameTime gameTime, GamePadState gp, KeyboardState kb)
+        public void Update(GameTime gameTime, GamePadState gp, KeyboardState kb, Map map)
         {
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -79,7 +72,32 @@ namespace Solfège
 
             Vector2 velocity = input * MoveSpeed * elapsed;
 
+
+            Vector2 newPos = new Vector2(Position.X + velocity.X, Position.Y);
+            Position.X = newPos.X;
+            if (!CollidesWithWall(newPos, map))
+            {
+                
+            }
+
+            newPos = new Vector2(Position.X, Position.Y + velocity.Y);
+            Position.Y = newPos.Y;
+            if (!CollidesWithWall(newPos, map))
+            {
+                
+            }
         }
+
+        //private bool CollidesWithWall(Vector2 pos, Map map)
+        //{
+
+        //    int left = (int)(pos.X / Map.TileWidth);
+        //    int right = (int)((pos.X + Size.X - 1) / Map.TileWidth);
+        //    int top = (int)(pos.Y / Map.TileHeight);
+        //    int bottom = (int)((pos.Y + Size.Y - 1) / Map.TileHeight);
+
+        //    return map.IsWall(left, top) || map.IsWall(right, top) || map.IsWall(left, bottom) || map.IsWall(right, bottom);
+        //}
 
         public void Draw(SpriteBatch spriteBatch, Camera camera)
         {
