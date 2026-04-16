@@ -36,7 +36,7 @@ namespace Solfège
             graphics.PreferredBackBufferWidth = ScreenWidth;
             graphics.PreferredBackBufferHeight = ScreenHeight;
             Content.RootDirectory = "Content";
-            IsMouseVisible = true; 
+            IsMouseVisible = true;
         }
 
         /// <summary>
@@ -48,7 +48,8 @@ namespace Solfège
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-
+            map = new Map(Content, GraphicsDevice);
+            camera = new Camera(ScreenWidth, ScreenHeight, map.MapWidthPixels, map.MapHeightPixels);
             base.Initialize();
         }
 
@@ -60,9 +61,9 @@ namespace Solfège
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            map = new Map(Content, GraphicsDevice);
+            
             Conductor = new Conductor(Content, GraphicsDevice);
-            metronome= new MetronomeSystem(Content, GraphicsDevice);
+            metronome = new MetronomeSystem(Content, GraphicsDevice);
 
             Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
 
@@ -109,12 +110,14 @@ namespace Solfège
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.White);
 
             // TODO: Add your drawing code here
             spriteBatch.Begin();
+            map.Draw(spriteBatch, camera);
             metronome.Draw(spriteBatch);
             Conductor.Draw(spriteBatch, camera);
+            
 
             spriteBatch.End();
             base.Draw(gameTime);

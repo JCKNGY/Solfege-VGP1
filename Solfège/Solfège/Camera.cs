@@ -24,8 +24,6 @@ namespace Solfège
 
             Position.X = playerPos.X + playerSize.X / 2f - screenWidth / 2f;
             Position.Y = playerPos.Y + playerSize.Y / 2f - screenHeight / 2f;
-
-
             ClampToMap();
         }
 
