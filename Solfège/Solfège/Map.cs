@@ -8,31 +8,38 @@ namespace Solfège
 {
     public class Map
     {
+
         public const int TileWidth = 32;
         public const int TileHeight = 32;
+
 
         public const int MapTilesWide = 100;
         public const int MapTilesTall = 50;
 
+
         public int MapWidthPixels = MapTilesWide * TileWidth;
         public int MapHeightPixels = MapTilesTall * TileHeight;
 
+
         private int[,] tileMap;
 
+
         private List<Texture2D> tileTextures;
+
+        private Random random = new Random(42);
 
         public Map(ContentManager content, GraphicsDevice graphicsDevice)
         {
             tileTextures = new List<Texture2D>();
 
-            for (int i = 0; i < 65; i++)
+            for (int i = 1; i < 66; i++)
             {
                 tileTextures.Add(content.Load<Texture2D>("sprites/white"));
             }
 
+
             GenerateMap();
         }
-
         private void GenerateMap()
         {
             tileMap = new int[MapTilesWide, MapTilesTall];
@@ -41,14 +48,16 @@ namespace Solfège
             {
                 for (int x = 0; x < MapTilesWide; x++)
                 {
+
                     if (x == 0 || x == MapTilesWide - 1 ||
                         y == 0 || y == MapTilesTall - 1)
                     {
-                        tileMap[x, y] = 0; // wall
+                        tileMap[x, y] = 0;
                     }
                     else
                     {
-                        tileMap[x, y] = 1; // blank white floor
+
+                        tileMap[x, y] = random.Next(1, 65);
                     }
                 }
             }
@@ -57,17 +66,21 @@ namespace Solfège
         public bool IsWall(int tileX, int tileY)
         {
             if (tileX < 0 || tileX >= MapTilesWide || tileY < 0 || tileY >= MapTilesTall)
+            {
                 return true;
+            }
 
             return tileMap[tileX, tileY] == 0;
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera camera)
         {
+
             int startX = (int)(camera.Position.X / TileWidth);
             int startY = (int)(camera.Position.Y / TileHeight);
             int endX = startX + (1280 / TileWidth) + 2;
             int endY = startY + (720 / TileHeight) + 2;
+
 
             startX = Math.Max(0, startX);
             startY = Math.Max(0, startY);
@@ -79,8 +92,6 @@ namespace Solfège
                 for (int x = startX; x < endX; x++)
                 {
                     int tileIndex = tileMap[x, y];
-                    if (tileIndex == 0) continue; // skip walls (invisible border)
-
                     Vector2 worldPos = new Vector2(x * TileWidth, y * TileHeight);
                     Vector2 screenPos = worldPos - camera.Position;
 
