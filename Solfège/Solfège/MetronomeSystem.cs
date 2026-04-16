@@ -17,24 +17,19 @@ namespace Solfège
         Texture2D whitetexture;
         Rectangle ContainerRect;
         SpriteFont font;
-        List<Beat> beatlist;
-
-        String text;
         double BPM;
         double timer;
 
         double SPB;
         //seconds per beat
         
-        public MetronomeSystem(ContentManager content, GraphicsDevice graphicsDevice)
+        public MetronomeSystem(ContentManager content, GraphicsDevice graphicsDevice, int b)
         {
             whitetexture = content.Load<Texture2D>("sprites/white");
             font = content.Load<SpriteFont>("Font");
-            ContainerRect = new Rectangle(0, 500, 800, 150);
+            ContainerRect = new Rectangle(200, 500, 150, 150);
 
-            beatlist = new List<Beat>();
-            text = " ";
-            beatlist.Add(new Beat(content));
+            BPM = 120;
             timer = 0;
         }
 
@@ -44,16 +39,18 @@ namespace Solfège
         {
             timer += gameTime.ElapsedGameTime.TotalSeconds;
 
-            SPB = BPM / 60;
+            SPB = 60/BPM;
             
             if(timer >= SPB)
             {
-                text = "click";
+                ContainerRect.Height = 180;
+                ContainerRect.Width = 180;
                 timer -= SPB;
             }
             else
             {
-                text = " ";
+                ContainerRect.Height = 150;
+                ContainerRect.Width = 150;
             }
 
         }
@@ -61,7 +58,6 @@ namespace Solfège
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.DrawString(font, text, new Vector2(200, 200), Color.White);
             spriteBatch.Draw(whitetexture, ContainerRect, Color.Yellow);
         }
     }
