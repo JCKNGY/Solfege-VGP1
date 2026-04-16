@@ -60,7 +60,7 @@ namespace Solfège
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Conductor = new Conductor(Content, GraphicsDevice);
             camera = new Camera(ScreenWidth, ScreenHeight);
-            metronome= new MetronomeSystem(Content, GraphicsDevice);
+            metronome= new MetronomeSystem(Content, GraphicsDevice, 240);
 
             Conductor.Position = new Vector2(1280 /2f, 720/ 2f);
 
