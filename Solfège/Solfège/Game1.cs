@@ -27,6 +27,11 @@ namespace Solfège
         private Camera camera;
         private MetronomeSystem metronome;
 
+        SpriteFont font;
+        private WaveManager waveManager;
+
+
+
         KeyboardState oldKb;
 
 
@@ -48,8 +53,7 @@ namespace Solfège
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            map = new Map(Content, GraphicsDevice);
-            camera = new Camera(ScreenWidth, ScreenHeight, map.MapWidthPixels, map.MapHeightPixels);
+            
             base.Initialize();
         }
 
@@ -61,14 +65,25 @@ namespace Solfège
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            
+
+            map = new Map(Content, GraphicsDevice);
+            camera = new Camera(ScreenWidth, ScreenHeight, map.MapWidthPixels, map.MapHeightPixels);
+
             Conductor = new Conductor(Content, GraphicsDevice);
             
             metronome= new MetronomeSystem(Content, GraphicsDevice, 240);
 
+            font = Content.Load<SpriteFont>("Font");
+            map = new Map(Content, GraphicsDevice);
+            camera = new Camera(ScreenWidth, ScreenHeight, map.MapWidthPixels, map.MapHeightPixels);
+            waveManager = new WaveManager(GraphicsDevice);
+            waveManager.StartNextWave(Conductor.Position);
+
             Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
 
             camera.CenterOn(Conductor.Position, Conductor.Size);
+
+
 
             // TODO: use this.Content to load your game content here
         }
@@ -101,6 +116,11 @@ namespace Solfège
             Conductor.Update(gameTime, gp, kb, map);
             camera.Update(Conductor.Position, Conductor.Size);
             metronome.Update(gameTime);
+
+            waveManager.Update(gameTime, Conductor.Position, Conductor);
+            if (!waveManager.WaveActive)
+                waveManager.StartNextWave(Conductor.Position);
+
             oldKb = kb;
             base.Update(gameTime);
         }
@@ -117,8 +137,12 @@ namespace Solfège
             spriteBatch.Begin();
             map.Draw(spriteBatch, camera);
             metronome.Draw(spriteBatch);
-            Conductor.Draw(spriteBatch, camera);
-            
+
+            waveManager.Draw(spriteBatch, camera);
+            spriteBatch.DrawString(font, "Wave: " + waveManager.CurrentWave, new Vector2(10, 35), Color.Black);
+
+            Conductor.Draw(spriteBatch, camera, font);
+
 
             spriteBatch.End();
             base.Draw(gameTime);

@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 
 namespace Solfège
 {
@@ -11,80 +10,51 @@ namespace Solfège
         public const int TileWidth = 32;
         public const int TileHeight = 32;
 
-        public const int MapTilesWide = 100;
-        public const int MapTilesTall = 50;
+        public const int MapTilesWide = 500;
+        public const int MapTilesTall = 500;
 
         public int MapWidthPixels = MapTilesWide * TileWidth;
         public int MapHeightPixels = MapTilesTall * TileHeight;
 
-        private int[,] tileMap;
-
-        private List<Texture2D> tileTextures;
+        private Texture2D floorTile;  // light gray
+        private Texture2D gridLine;   // dark gray for grid lines
 
         public Map(ContentManager content, GraphicsDevice graphicsDevice)
         {
-            tileTextures = new List<Texture2D>();
-
-            for (int i = 0; i < 65; i++)
+            // Create a 32x32 light gray tile with a dark border so the grid is visible
+            floorTile = new Texture2D(graphicsDevice, TileWidth, TileHeight);
+            Color[] pixels = new Color[TileWidth * TileHeight];
+            for (int y = 0; y < TileHeight; y++)
             {
-                tileTextures.Add(content.Load<Texture2D>("sprites/white"));
-            }
-
-            GenerateMap();
-        }
-
-        private void GenerateMap()
-        {
-            tileMap = new int[MapTilesWide, MapTilesTall];
-
-            for (int y = 0; y < MapTilesTall; y++)
-            {
-                for (int x = 0; x < MapTilesWide; x++)
+                for (int x = 0; x < TileWidth; x++)
                 {
-                    if (x == 0 || x == MapTilesWide - 1 ||
-                        y == 0 || y == MapTilesTall - 1)
-                    {
-                        tileMap[x, y] = 0; // wall
-                    }
-                    else
-                    {
-                        tileMap[x, y] = 1; // blank white floor
-                    }
+                    // Dark border, light gray interior
+                    bool isBorder = (x == 0 || y == 0 || x == TileWidth - 1 || y == TileHeight - 1);
+                    pixels[y * TileWidth + x] = isBorder ? new Color(150, 150, 150) : new Color(220, 220, 220);
                 }
             }
+            floorTile.SetData(pixels);
         }
 
         public bool IsWall(int tileX, int tileY)
         {
-            if (tileX < 0 || tileX >= MapTilesWide || tileY < 0 || tileY >= MapTilesTall)
-                return true;
-
-            return tileMap[tileX, tileY] == 0;
+            return false;
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera camera)
         {
-            int startX = (int)(camera.Position.X / TileWidth);
-            int startY = (int)(camera.Position.Y / TileHeight);
-            int endX = startX + (1280 / TileWidth) + 2;
-            int endY = startY + (720 / TileHeight) + 2;
+            int startX = (int)Math.Floor(camera.Position.X / TileWidth);
+            int startY = (int)Math.Floor(camera.Position.Y / TileHeight);
+            int tilesX = (1280 / TileWidth) + 2;
+            int tilesY = (720 / TileHeight) + 2;
 
-            startX = Math.Max(0, startX);
-            startY = Math.Max(0, startY);
-            endX = Math.Min(MapTilesWide, endX);
-            endY = Math.Min(MapTilesTall, endY);
-
-            for (int y = startY; y < endY; y++)
+            for (int y = startY; y < startY + tilesY; y++)
             {
-                for (int x = startX; x < endX; x++)
+                for (int x = startX; x < startX + tilesX; x++)
                 {
-                    int tileIndex = tileMap[x, y];
-                    if (tileIndex == 0) continue; // skip walls (invisible border)
-
                     Vector2 worldPos = new Vector2(x * TileWidth, y * TileHeight);
                     Vector2 screenPos = worldPos - camera.Position;
-
-                    spriteBatch.Draw(tileTextures[tileIndex], screenPos, Color.White);
+                    spriteBatch.Draw(floorTile, screenPos, Color.White);
                 }
             }
         }
