@@ -1,60 +1,204 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Solfège
 {
+    public enum EnemyType
+    {
+        Melee,      
+        Projectile, 
+        Slam      
+    }
+
     public class Enemy
     {
         public Vector2 Position;
         public Vector2 Size;
         public bool IsAlive = true;
+        public EnemyType Type;
 
-        private int Health = 50;
-        private int MaxHealth = 50;
-        private int Damage = 10;
-        private float MoveSpeed = 60f;
+        private int health;
+        private int maxHealth;
+        private int damage;
+        private float moveSpeed;
 
         private Texture2D texture;
+        private Texture2D healthBarBg;
+        private Texture2D healthBarFill;
+
 
         private float damageCooldown = 0f;
         private const float DamageCooldownMax = 1.0f;
 
-        public Enemy(Vector2 spawnPosition, GraphicsDevice graphicsDevice)
+
+        private Vector2 knockbackVelocity = Vector2.Zero;
+        private const float KnockbackDecay = 8f;
+
+
+        private float shootTimer = 0f;
+        private float shootCooldown = 2.5f;
+        private const float ShootRange = 350f;
+
+
+        private float slamTimer = 0f;
+        private float slamCooldown = 3.0f;
+        private const float SlamRange = 60f;
+        public bool JustSlammed = false; 
+
+
+        private float spawnScale = 0.1f;
+        private bool spawning = true;
+
+
+        private float hitFlash = 0f;
+
+
+        public Vector2 SeparationForce = Vector2.Zero;
+
+        public Enemy(Vector2 spawnPosition, GraphicsDevice graphicsDevice, EnemyType type, int wave = 1)
         {
             Position = spawnPosition;
+            Type = type;
 
-            // Red placeholder rectangle for the zombie
-            texture = new Texture2D(graphicsDevice, 32, 48);
-            Color[] pixels = new Color[32 * 48];
+
+            float waveScale = 1f + (wave - 1) * 0.25f;
+
+            switch (type)
+            {
+                case EnemyType.Melee:
+                    maxHealth = (int)(30 * waveScale);
+                    damage = (int)(10 * waveScale);
+                    moveSpeed = 90f + wave * 5f;
+                    Size = new Vector2(32, 48);
+                    break;
+
+                case EnemyType.Projectile:
+                    maxHealth = (int)(20 * waveScale);
+                    damage = (int)(6 * waveScale);
+                    moveSpeed = 70f + wave * 3f;
+                    Size = new Vector2(30, 44);
+                    shootTimer = (float)new Random().NextDouble() * 1.5f;
+                    break;
+
+                case EnemyType.Slam:
+                    maxHealth = (int)(50 * waveScale);
+                    damage = (int)(18 * waveScale);
+                    moveSpeed = 55f + wave * 2f;
+                    Size = new Vector2(36, 52);
+                    slamTimer = (float)new Random().NextDouble() * 1.5f;
+                    break;
+            }
+
+            health = maxHealth;
+
+
+            Color bodyColor = type == EnemyType.Melee ? new Color(220, 60, 60) :
+                              type == EnemyType.Projectile ? new Color(230, 140, 40) :
+                                                             new Color(120, 60, 200);
+
+            int w = (int)Size.X, h = (int)Size.Y;
+            texture = new Texture2D(graphicsDevice, w, h);
+            Color[] pixels = new Color[w * h];
             for (int i = 0; i < pixels.Length; i++)
-                pixels[i] = Color.Red;
+                pixels[i] = bodyColor;
             texture.SetData(pixels);
 
-            Size = new Vector2(32, 48);
+
+            healthBarBg = new Texture2D(graphicsDevice, 1, 1);
+            healthBarBg.SetData(new[] { Color.DarkRed });
+
+            healthBarFill = new Texture2D(graphicsDevice, 1, 1);
+            healthBarFill.SetData(new[] { Color.LimeGreen });
         }
 
-        public void Update(GameTime gameTime, Vector2 playerPosition)
+
+        public int Damage => damage;
+        public int Health => health;
+        public int MaxHealth => maxHealth;
+        public EnemyType EnemyKind => Type;
+
+
+        public EnemyProjectile Update(GameTime gameTime, Vector2 playerPosition)
         {
-            if (!IsAlive) return;
+            if (!IsAlive) return null;
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            JustSlammed = false;
 
-            if (damageCooldown > 0f)
-                damageCooldown -= elapsed;
 
-            // Walk straight toward the player
+            if (spawning)
+            {
+                spawnScale = Math.Min(1f, spawnScale + elapsed * 6f);
+                if (spawnScale >= 1f) spawning = false;
+            }
+
+
+            if (hitFlash > 0f) hitFlash -= elapsed;
+
+
+            if (damageCooldown > 0f) damageCooldown -= elapsed;
+
+
+            if (knockbackVelocity != Vector2.Zero)
+            {
+                Position += knockbackVelocity * elapsed;
+                knockbackVelocity -= knockbackVelocity * KnockbackDecay * elapsed;
+                if (knockbackVelocity.Length() < 2f) knockbackVelocity = Vector2.Zero;
+            }
+
+
             Vector2 direction = playerPosition - Position;
-            if (direction.Length() > 1f)
+            float dist = direction.Length();
+
+
+            float stopDist = (Type == EnemyType.Projectile) ? ShootRange * 0.75f : 0f;
+
+            if (dist > stopDist + 2f)
             {
                 direction.Normalize();
-                Position += direction * MoveSpeed * elapsed;
+                Position += (direction * moveSpeed + SeparationForce) * elapsed;
             }
+            else
+            {
+                Position += SeparationForce * elapsed;
+            }
+
+
+            EnemyProjectile fired = null;
+
+            if (Type == EnemyType.Projectile)
+            {
+                shootTimer -= elapsed;
+                if (shootTimer <= 0f && dist < ShootRange)
+                {
+                    shootTimer = shootCooldown;
+                    fired = new EnemyProjectile(Position, playerPosition, damage);
+                }
+            }
+
+            if (Type == EnemyType.Slam)
+            {
+                slamTimer -= elapsed;
+                if (slamTimer <= 0f && dist < SlamRange + Size.X)
+                {
+                    slamTimer = slamCooldown;
+                    JustSlammed = true;
+                }
+            }
+
+
+            SeparationForce = Vector2.Zero;
+
+            return fired;
         }
 
-        // Returns how much damage was dealt to player this frame (0 if none)
+
+
         public int CheckContactDamage(Vector2 playerPos, Vector2 playerSize)
         {
             if (!IsAlive || damageCooldown > 0f) return 0;
+            if (Type == EnemyType.Projectile) return 0; 
 
             Rectangle enemyRect = new Rectangle((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
             Rectangle playerRect = new Rectangle((int)playerPos.X, (int)playerPos.Y, (int)playerSize.X, (int)playerSize.Y);
@@ -62,32 +206,128 @@ namespace Solfège
             if (enemyRect.Intersects(playerRect))
             {
                 damageCooldown = DamageCooldownMax;
-                return Damage;
+                return damage;
             }
             return 0;
         }
 
+
+        public void TakeDamage(int amount, Vector2 knockbackDir, float knockbackForce = 200f)
+        {
+            health -= amount;
+            hitFlash = 0.12f;
+
+            if (knockbackDir != Vector2.Zero)
+            {
+                Vector2 kb = knockbackDir;
+                kb.Normalize();
+                knockbackVelocity += kb * knockbackForce;
+            }
+
+            if (health <= 0)
+            {
+                health = 0;
+                IsAlive = false;
+            }
+        }
+
         public void TakeDamage(int amount)
         {
-            Health -= amount;
-            if (Health <= 0)
-                IsAlive = false;
+            TakeDamage(amount, Vector2.Zero, 0f);
         }
+
 
         public void Draw(SpriteBatch spriteBatch, Camera camera)
         {
             if (!IsAlive) return;
 
             Vector2 screenPos = Position - camera.Position;
-            spriteBatch.Draw(texture, screenPos, Color.White);
 
-            // Health bar above enemy
-            int barWidth = (int)Size.X;
-            int filledWidth = (int)(barWidth * ((float)Health / MaxHealth));
-            int barY = (int)screenPos.Y - 8;
 
-            spriteBatch.Draw(texture, new Rectangle((int)screenPos.X, barY, barWidth, 5), Color.DarkRed);
-            spriteBatch.Draw(texture, new Rectangle((int)screenPos.X, barY, filledWidth, 5), Color.LimeGreen);
+            if (spawning && spawnScale < 1f)
+            {
+                Vector2 origin = Size / 2f;
+                spriteBatch.Draw(
+                    texture,
+                    screenPos + origin,
+                    null,
+                    hitFlash > 0f ? Color.White : Color.White,
+                    0f,
+                    origin,
+                    spawnScale,
+                    SpriteEffects.None,
+                    0f
+                );
+            }
+            else
+            {
+                Color tint = hitFlash > 0f ? Color.White * 2f : Color.White; 
+                spriteBatch.Draw(texture, screenPos, tint);
+            }
+
+
+            int barW = (int)Size.X;
+            int filled = (int)(barW * ((float)health / maxHealth));
+            int barY = (int)screenPos.Y - 10;
+
+            spriteBatch.Draw(healthBarBg, new Rectangle((int)screenPos.X, barY, barW, 6), Color.White);
+            spriteBatch.Draw(healthBarFill, new Rectangle((int)screenPos.X, barY, filled, 6), Color.White);
+        }
+    }
+
+
+    public class EnemyProjectile
+    {
+        public Vector2 Position;
+        public bool IsAlive = true;
+
+        private Vector2 velocity;
+        private const float Speed = 200f;
+        private const float Lifetime = 3.5f;
+        private float timeAlive = 0f;
+        private int damage;
+
+        private static readonly Vector2 Size = new Vector2(12, 12);
+
+        public EnemyProjectile(Vector2 origin, Vector2 target, int dmg)
+        {
+            Position = origin;
+            damage = dmg;
+
+            Vector2 dir = target - origin;
+            if (dir.Length() > 0f) dir.Normalize();
+            velocity = dir * Speed;
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            if (!IsAlive) return;
+            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Position += velocity * elapsed;
+            timeAlive += elapsed;
+            if (timeAlive >= Lifetime) IsAlive = false;
+        }
+
+
+        public int CheckHit(Vector2 playerPos, Vector2 playerSize)
+        {
+            if (!IsAlive) return 0;
+            Rectangle projRect = new Rectangle((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
+            Rectangle playerRect = new Rectangle((int)playerPos.X, (int)playerPos.Y, (int)playerSize.X, (int)playerSize.Y);
+
+            if (projRect.Intersects(playerRect))
+            {
+                IsAlive = false;
+                return damage;
+            }
+            return 0;
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Camera camera, Texture2D pixel)
+        {
+            if (!IsAlive) return;
+            Vector2 screenPos = Position - camera.Position;
+            spriteBatch.Draw(pixel, new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)Size.X, (int)Size.Y), Color.Orange);
         }
     }
 }
