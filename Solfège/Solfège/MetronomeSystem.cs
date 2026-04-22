@@ -16,21 +16,31 @@ namespace Solfège
     {
         Texture2D whitetexture;
         Rectangle ContainerRect;
+        Rectangle sourceRect;
         SpriteFont font;
         double BPM;
         double timer;
+
+        SoundEffect hearbeat;
+        int ogSize;
+        int newSize;
 
         double SPB;
         //seconds per beat
         
         public MetronomeSystem(ContentManager content, GraphicsDevice graphicsDevice, int b)
         {
-            whitetexture = content.Load<Texture2D>("sprites/white");
+            whitetexture = content.Load<Texture2D>("sprites/Ui/HeartFull");
             font = content.Load<SpriteFont>("Font");
-            ContainerRect = new Rectangle(200, 500, 150, 150);
+            hearbeat = content.Load<SoundEffect>("HeartBeat");
 
-            BPM = 120;
+            ContainerRect = new Rectangle(100, 150, 128, 128);
+            sourceRect = new Rectangle(0, 0, 64, 64);
+            BPM = 60;
             timer = 0;
+            ogSize = ContainerRect.Height;
+            newSize = ContainerRect.Height + 50;
+            
         }
 
        
@@ -43,14 +53,16 @@ namespace Solfège
             
             if(timer >= SPB)
             {
-                ContainerRect.Height = 180;
-                ContainerRect.Width = 180;
+                ContainerRect.Height = newSize;
+                ContainerRect.Width = newSize;
+                hearbeat.Play();
                 timer -= SPB;
+                
             }
             else
             {
-                ContainerRect.Height = 150;
-                ContainerRect.Width = 150;
+                ContainerRect.Height = ogSize;
+                ContainerRect.Width = ogSize;
             }
 
         }
@@ -58,7 +70,7 @@ namespace Solfège
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(whitetexture, ContainerRect, Color.Yellow);
+            spriteBatch.Draw(whitetexture, ContainerRect, sourceRect, Color.White, 0, new Vector2(64/2, 64/2), SpriteEffects.None, 0);
         }
     }
 }
