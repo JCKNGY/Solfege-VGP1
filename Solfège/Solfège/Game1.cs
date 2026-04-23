@@ -115,7 +115,7 @@ namespace Solfège
 
             Conductor.Update(gameTime, gp, kb, map);
             camera.Update(Conductor.Position, Conductor.Size);
-            metronome.Update(gameTime);
+            metronome.Update(gameTime, Conductor);
 
             waveManager.Update(gameTime, Conductor.Position, Conductor);
             if (!waveManager.WaveActive)
@@ -136,13 +136,13 @@ namespace Solfège
             // TODO: Add your drawing code here
             spriteBatch.Begin();
             map.Draw(spriteBatch, camera);
-            metronome.Draw(spriteBatch);
+            
 
             waveManager.Draw(spriteBatch, camera);
             spriteBatch.DrawString(font, "Wave: " + waveManager.CurrentWave, new Vector2(10, 35), Color.Black);
 
             Conductor.Draw(spriteBatch, camera, font);
-
+            metronome.Draw(spriteBatch);
 
             spriteBatch.End();
             base.Draw(gameTime);
