@@ -56,20 +56,7 @@ namespace Solfège
             Vector2 screenPos = Position - camera.Position;
             spriteBatch.Draw(texture, screenPos, Color.White);
 
-            // Health bar above player
-            int barWidth = (int)Size.X;
-            int filledWidth = (int)(barWidth * ((float)Health / MaxHealth));
-            int barY = (int)screenPos.Y - 12;
 
-            // Draw bar background and fill using a simple colored rectangle trick
-            Texture2D pixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
-            pixel.SetData(new[] { Color.White });
-
-            spriteBatch.Draw(pixel, new Rectangle((int)screenPos.X, barY, barWidth, 8), Color.DarkRed);
-            spriteBatch.Draw(pixel, new Rectangle((int)screenPos.X, barY, filledWidth, 8), Color.LimeGreen);
-
-            // HP text
-            spriteBatch.DrawString(font, "HP: " + Health + "/" + MaxHealth, new Vector2(10, 10), Color.Red);
         }
     }
 }
