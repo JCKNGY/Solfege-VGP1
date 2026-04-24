@@ -66,6 +66,7 @@ namespace Solfège
 
             // HP text
             spriteBatch.DrawString(font, "HP: " + Health + "/" + MaxHealth, new Vector2(10, 10), Color.Red);
+
         }
     }
 }
