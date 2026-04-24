@@ -136,7 +136,7 @@ namespace Solfège
             // Allows the game to exit
             GamePadState gp = GamePad.GetState(PlayerIndex.One);
             KeyboardState kb = Keyboard.GetState();
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || !oldKb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
             // TODO: Add your update logic here

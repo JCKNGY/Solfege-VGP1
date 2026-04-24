@@ -264,7 +264,7 @@ namespace Solfège
 
             else if (CurrentScreen == GameScreen.Settings)
             {
-                //DrawSettings(sb);
+                DrawSettings(sb);
             }
             
         }
