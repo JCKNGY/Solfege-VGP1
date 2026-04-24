@@ -145,13 +145,9 @@ namespace Solfège
             {
                 titleScreen.Update(gameTime);
 
-                currentScreen = titleScreen.CurrentScreen;
-            }
-            else if (currentScreen == GameScreen.Playing)
-            {
-                Conductor.Update(gameTime, gp, kb, map);
-                camera.Update(Conductor.Position, Conductor.Size);
-                metronome.Update(gameTime);
+            Conductor.Update(gameTime, gp, kb, map);
+            camera.Update(Conductor.Position, Conductor.Size);
+            metronome.Update(gameTime, Conductor);
 
                 waveManager.Update(gameTime, Conductor.Position, Conductor);
                 if (!waveManager.WaveActive)
@@ -176,6 +172,15 @@ namespace Solfège
             GraphicsDevice.Clear(Color.White);
 
             // TODO: Add your drawing code here
+            spriteBatch.Begin();
+            map.Draw(spriteBatch, camera);
+            
+
+            waveManager.Draw(spriteBatch, camera);
+            spriteBatch.DrawString(font, "Wave: " + waveManager.CurrentWave, new Vector2(10, 35), Color.Black);
+
+            Conductor.Draw(spriteBatch, camera, font);
+            metronome.Draw(spriteBatch);
 
             if (currentScreen == GameScreen.Title)
             {
