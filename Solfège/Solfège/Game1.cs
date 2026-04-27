@@ -11,9 +11,6 @@ using System.Linq;
 
 namespace Solfège
 {
-    /// <summary>
-    /// This is the main type for your game
-    /// </summary>
     public class Game1 : Microsoft.Xna.Framework.Game
     {
         GraphicsDeviceManager graphics;
@@ -31,14 +28,23 @@ namespace Solfège
         private MetronomeSystem metronome;
         private WaveManager waveManager;
         private Texture2D texture;
+        private Texture2D pixel;
 
         SpriteFont font;
         SpriteFont titleFont;
         SpriteFont menuFont;
 
-
         KeyboardState oldKb;
 
+        private static readonly Color ColGold = new Color(201, 168, 76);
+        private static readonly Color ColGold2 = new Color(232, 201, 122);
+        private static readonly Color ColMuted = new Color(107, 102, 88);
+        private static readonly Color ColWhite = new Color(232, 228, 217);
+        private static readonly Color ColDeep = new Color(8, 8, 16);
+
+        private string[] pauseLabels = { "Resume", "Settings", "Quit to Title" };
+        private int pauseIndex = 0;
+        private float pauseGlowTimer = 0f;
 
         public Game1()
         {
@@ -49,28 +55,14 @@ namespace Solfège
             IsMouseVisible = true;
         }
 
-        /// <summary>
-        /// Allows the game to perform any initialization it needs to before starting to run.
-        /// This is where it can query for any required services and load any non-graphic
-        /// related content.  Calling base.Initialize will enumerate through any components
-        /// and initialize them as well.
-        /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-            
             base.Initialize();
         }
 
-        /// <summary>
-        /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
-        /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
 
             font = Content.Load<SpriteFont>("Font");
             titleFont = font;
@@ -92,21 +84,16 @@ namespace Solfège
 
             texture = Content.Load<Texture2D>("sprites/Ui/solfegeTitle");
 
-
-
-            // TODO: use this.Content to load your game content here
+            pixel = new Texture2D(GraphicsDevice, 1, 1);
+            pixel.SetData(new[] { Color.White });
         }
-
 
         private void StartGame()
         {
             currentScreen = GameScreen.Playing;
             waveManager.StartNextWave(Conductor.Position);
-
-
             ApplyAudioSettings();
         }
-
 
         private void ApplyAudioSettings()
         {
@@ -115,81 +102,113 @@ namespace Solfège
             SoundEffect.MasterVolume = titleScreen.SfxVolume * titleScreen.MasterVolume;
         }
 
-
-
-        /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// all content.
-        /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
         }
 
-        /// <summary>
-        /// Allows the game to run logic such as updating the world,
-        /// checking for collisions, gathering input, and playing audio.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Allows the game to exit
             GamePadState gp = GamePad.GetState(PlayerIndex.One);
             KeyboardState kb = Keyboard.GetState();
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
-
-            // TODO: Add your update logic here
 
             if (currentScreen == GameScreen.Title || currentScreen == GameScreen.Settings)
             {
                 titleScreen.Update(gameTime);
+                currentScreen = titleScreen.CurrentScreen;
+            }
+            else if (currentScreen == GameScreen.Playing)
+            {
+                if (!oldKb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.Escape))
+                {
+                    currentScreen = GameScreen.Paused;
+                    pauseIndex = 0;
+                }
+                else
+                {
+                    Conductor.Update(gameTime, gp, kb, map);
+                    camera.Update(Conductor.Position, Conductor.Size);
+                    metronome.Update(gameTime, Conductor);
 
-            Conductor.Update(gameTime, gp, kb, map);
-            camera.Update(Conductor.Position, Conductor.Size);
-            metronome.Update(gameTime, Conductor);
+                    waveManager.Update(gameTime, Conductor.Position, Conductor);
+                    if (!waveManager.WaveActive)
+                        waveManager.StartNextWave(Conductor.Position);
 
-                waveManager.Update(gameTime, Conductor.Position, Conductor);
-                if (!waveManager.WaveActive)
-                    waveManager.StartNextWave(Conductor.Position);
+                    CollisionManager.Update(Conductor, waveManager);
 
-                CollisionManager.Update(Conductor, waveManager);
-
-                if (!Conductor.IsAlive)
-                    currentScreen = GameScreen.GameOver;
+                    if (!Conductor.IsAlive)
+                        currentScreen = GameScreen.GameOver;
+                }
+            }
+            else if (currentScreen == GameScreen.Paused)
+            {
+                pauseGlowTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                UpdatePauseInput(kb);
+            }
+            else if (currentScreen == GameScreen.GameOver)
+            {
+                if (!oldKb.IsKeyDown(Keys.Enter) && kb.IsKeyDown(Keys.Enter))
+                {
+                    currentScreen = GameScreen.Title;
+                    Conductor.Health = Conductor.MaxHealth;
+                    Conductor.IsAlive = true;
+                    Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
+                    waveManager = new WaveManager(GraphicsDevice);
+                }
             }
 
             oldKb = kb;
             base.Update(gameTime);
         }
 
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+        private void UpdatePauseInput(KeyboardState kb)
+        {
+            if (!oldKb.IsKeyDown(Keys.Escape) && kb.IsKeyDown(Keys.Escape))
+            {
+                currentScreen = GameScreen.Playing;
+                return;
+            }
+
+            bool up = (!oldKb.IsKeyDown(Keys.Up) && kb.IsKeyDown(Keys.Up)) ||
+                      (!oldKb.IsKeyDown(Keys.W) && kb.IsKeyDown(Keys.W));
+            bool down = (!oldKb.IsKeyDown(Keys.Down) && kb.IsKeyDown(Keys.Down)) ||
+                        (!oldKb.IsKeyDown(Keys.S) && kb.IsKeyDown(Keys.S));
+            bool enter = (!oldKb.IsKeyDown(Keys.Enter) && kb.IsKeyDown(Keys.Enter)) ||
+                         (!oldKb.IsKeyDown(Keys.Space) && kb.IsKeyDown(Keys.Space));
+
+            if (up)
+                pauseIndex = (pauseIndex - 1 + pauseLabels.Length) % pauseLabels.Length;
+            if (down)
+                pauseIndex = (pauseIndex + 1) % pauseLabels.Length;
+
+            if (enter)
+                ActivatePauseMenu();
+        }
+
+        private void ActivatePauseMenu()
+        {
+            if (pauseIndex == 0)
+            {
+                currentScreen = GameScreen.Playing;
+            }
+            else if (pauseIndex == 1)
+            {
+                currentScreen = GameScreen.Settings;
+            }
+            else if (pauseIndex == 2)
+            {
+                currentScreen = GameScreen.Title;
+                Conductor.Health = Conductor.MaxHealth;
+                Conductor.IsAlive = true;
+                Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
+                waveManager = new WaveManager(GraphicsDevice);
+            }
+        }
+
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.White);
-
-            // TODO: Add your drawing code here
-            spriteBatch.Begin();
-            map.Draw(spriteBatch, camera);
-            
-
-            waveManager.Draw(spriteBatch, camera);
-            spriteBatch.DrawString(font, "Wave: " + waveManager.CurrentWave, new Vector2(10, 35), Color.Black);
-
-            Conductor.Draw(spriteBatch, camera, font);
-            metronome.Draw(spriteBatch);
-
-            if (currentScreen == GameScreen.Title)
-            {
-                spriteBatch.Begin();
-
-                spriteBatch.Draw(texture, new Rectangle(ScreenWidth / 2, ScreenHeight / 2, 10, 10), Color.White); 
-
-                spriteBatch.End();
-            }
             if (currentScreen == GameScreen.Title || currentScreen == GameScreen.Settings)
             {
                 GraphicsDevice.Clear(new Color(10, 10, 15));
@@ -213,6 +232,20 @@ namespace Solfège
 
                 spriteBatch.End();
             }
+            else if (currentScreen == GameScreen.Paused)
+            {
+                GraphicsDevice.Clear(Color.White);
+                spriteBatch.Begin();
+
+                map.Draw(spriteBatch, camera);
+                metronome.Draw(spriteBatch);
+                waveManager.Draw(spriteBatch, camera);
+                Conductor.Draw(spriteBatch, camera, font);
+
+                DrawPauseOverlay(spriteBatch);
+
+                spriteBatch.End();
+            }
             else if (currentScreen == GameScreen.GameOver)
             {
                 GraphicsDevice.Clear(new Color(10, 10, 15));
@@ -220,29 +253,121 @@ namespace Solfège
 
                 string msg = "GAME OVER";
                 Vector2 sz = font.MeasureString(msg);
-                spriteBatch.DrawString(font, msg,new Vector2(ScreenWidth / 2f - sz.X / 2f, ScreenHeight / 2f - sz.Y / 2f),Color.Red);
+                spriteBatch.DrawString(font, msg,
+                    new Vector2(ScreenWidth / 2f - sz.X / 2f, ScreenHeight / 2f - sz.Y / 2f),
+                    Color.Red);
 
                 string sub = "Press ENTER to return to title";
                 Vector2 subSz = font.MeasureString(sub);
-                spriteBatch.DrawString(font, sub,new Vector2(ScreenWidth / 2f - subSz.X / 2f, ScreenHeight / 2f + 40),new Color(107, 102, 88));
+                spriteBatch.DrawString(font, sub, new Vector2(ScreenWidth / 2f - subSz.X / 2f, ScreenHeight / 2f + 40),new Color(107, 102, 88));
 
                 spriteBatch.End();
-
-
-                KeyboardState kb = Keyboard.GetState();
-                if (!oldKb.IsKeyDown(Keys.Enter) && kb.IsKeyDown(Keys.Enter))
-                {
-                    currentScreen = GameScreen.Title;
-
-                    Conductor.Health = Conductor.MaxHealth;
-                    Conductor.IsAlive = true;
-                    Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
-                    waveManager = new WaveManager(GraphicsDevice);
-                }
-                oldKb = Keyboard.GetState();
             }
 
             base.Draw(gameTime);
+        }
+
+        private void DrawPauseOverlay(SpriteBatch sb)
+        {
+            sb.Draw(pixel, new Rectangle(0, 0, ScreenWidth, ScreenHeight), Color.Black * 0.60f);
+
+            int panelW = 400;
+            int panelH = 320;
+            int panelX = ScreenWidth / 2 - panelW / 2;
+            int panelY = ScreenHeight / 2 - panelH / 2;
+
+            sb.Draw(pixel, new Rectangle(panelX, panelY, panelW, panelH), ColDeep);
+
+            DrawBorder(sb, new Rectangle(panelX, panelY, panelW, panelH), ColGold * 0.35f, 1);
+
+            DrawCorner(sb, new Vector2(panelX + 12, panelY + 12), true, true);
+            DrawCorner(sb, new Vector2(panelX + panelW - 12, panelY + 12), false, true);
+            DrawCorner(sb, new Vector2(panelX + 12, panelY + panelH - 12), true, false);
+            DrawCorner(sb, new Vector2(panelX + panelW - 12, panelY + panelH - 12), false, false);
+
+            float cx = panelX + panelW / 2f;
+
+            string header = "PAUSED";
+            Vector2 headerSz = menuFont.MeasureString(header);
+            sb.DrawString(menuFont, header, new Vector2(cx - headerSz.X / 2f, panelY + 36), ColWhite);
+
+            DrawHorizontalRule(sb, new Vector2(cx, panelY + 90), 80, 1f);
+
+            float menuTop = panelY + 110f;
+            float lineH = 56f;
+
+            for (int i = 0; i < pauseLabels.Length; i++)
+            {
+                bool selected = (i == pauseIndex);
+
+                float itemAlpha = 0.45f;
+                if (selected) itemAlpha = 1f;
+
+                Color labelColor = ColMuted;
+                if (selected) labelColor = ColWhite;
+
+                float scale = 1.0f;
+                if (selected) scale = 1.05f;
+
+                string label = pauseLabels[i].ToUpper();
+                Vector2 labelSz = menuFont.MeasureString(label) * scale;
+                float x = cx - labelSz.X / 2f;
+                float y = menuTop + i * lineH;
+
+                if (selected)
+                {
+                    float glow = 0.6f + 0.4f * (float)Math.Sin(pauseGlowTimer * 3f);
+                    float dotX = x - 22;
+                    float dotY = y + labelSz.Y / 2f;
+                    int dotSize = 7;
+                    sb.Draw(pixel,
+                        new Rectangle((int)(dotX - dotSize / 2), (int)(dotY - dotSize / 2), dotSize, dotSize),
+                        ColGold * glow);
+                }
+
+                sb.DrawString(menuFont, label, new Vector2(x, y), labelColor * itemAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
+
+            if (font != null)
+            {
+                string hint = "ESC to resume     ENTER to select";
+                Vector2 hSz = font.MeasureString(hint);
+                sb.DrawString(font, hint,
+                    new Vector2(cx - hSz.X / 2f, panelY + panelH - 30),
+                    ColMuted * 0.55f);
+            }
+        }
+
+        private void DrawBorder(SpriteBatch sb, Rectangle r, Color c, int thickness)
+        {
+            sb.Draw(pixel, new Rectangle(r.X, r.Y, r.Width, thickness), c);
+            sb.Draw(pixel, new Rectangle(r.X, r.Bottom, r.Width, thickness), c);
+            sb.Draw(pixel, new Rectangle(r.X, r.Y, thickness, r.Height), c);
+            sb.Draw(pixel, new Rectangle(r.Right, r.Y, thickness, r.Height), c);
+        }
+
+        private void DrawCorner(SpriteBatch sb, Vector2 pos, bool left, bool top)
+        {
+            int len = 14, t = 1;
+            int sx = (int)pos.X;
+            if (!left) sx = (int)pos.X - len;
+            int sy = (int)pos.Y;
+            if (!top) sy = (int)pos.Y - len;
+            Color c = ColGold * 0.4f;
+            sb.Draw(pixel, new Rectangle(sx, sy, len, t), c);
+            sb.Draw(pixel, new Rectangle(sx, sy, t, len), c);
+        }
+
+        private void DrawHorizontalRule(SpriteBatch sb, Vector2 center, int halfWidth, float alpha)
+        {
+            int thickness = 1;
+            sb.Draw(pixel,
+                new Rectangle((int)(center.X - halfWidth), (int)center.Y, halfWidth * 2, thickness),
+                ColGold * 0.35f * alpha);
+            int ds = 5;
+            sb.Draw(pixel,
+                new Rectangle((int)center.X - ds / 2, (int)center.Y - ds / 2 + thickness / 2, ds, ds),
+                ColGold * 0.6f * alpha);
         }
     }
 }
