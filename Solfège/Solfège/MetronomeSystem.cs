@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,7 +32,7 @@ namespace Solfège
 
         double SPB;
         //seconds per beat
-        
+
         public MetronomeSystem(ContentManager content, GraphicsDevice graphicsDevice, int b)
         {
 
@@ -46,22 +46,22 @@ namespace Solfège
             font = content.Load<SpriteFont>("Font");
             hearbeat = content.Load<SoundEffect>("HeartBeat");
 
-            ContainerRect = new Rectangle(graphicsDevice.Viewport.Width/2, 225, 64, 64);
+            ContainerRect = new Rectangle(graphicsDevice.Viewport.Width / 2, 225, 64, 64);
             sourceRect = new Rectangle(0, 0, 64, 64);
             BPM = 105;
             timer = 0;
             ogSize = ContainerRect.Height;
             newSize = ContainerRect.Height + 50;
-            
+
         }
 
-       
+
 
         public void Update(GameTime gameTime, Conductor player)
         {
             timer += gameTime.ElapsedGameTime.TotalSeconds;
 
-            SPB = 60/BPM;
+            SPB = 60 / BPM;
 
 
             if (player.Health >= 100)
@@ -84,14 +84,14 @@ namespace Solfège
             {
                 currenttexture = heartgonetexture;
             }
-            
+
             if (timer >= SPB && player.IsAlive == true)
             {
                 ContainerRect.Height = newSize;
                 ContainerRect.Width = newSize;
                 hearbeat.Play();
                 timer -= SPB;
-                
+
             }
             else
             {
@@ -104,7 +104,7 @@ namespace Solfège
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(currenttexture, ContainerRect, sourceRect, Color.White, 0, new Vector2(64/2, 64/2), SpriteEffects.None, 0);
+            spriteBatch.Draw(currenttexture, ContainerRect, sourceRect, Color.White, 0, new Vector2(64 / 2, 64 / 2), SpriteEffects.None, 0);
         }
     }
 }
