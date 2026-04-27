@@ -46,9 +46,9 @@ namespace Solfège
             font = content.Load<SpriteFont>("Font");
             hearbeat = content.Load<SoundEffect>("HeartBeat");
 
-            ContainerRect = new Rectangle(graphicsDevice.Viewport.Width / 2, 225, 64, 64);
+            ContainerRect = new Rectangle(graphicsDevice.Viewport.Width / 2, 600, 128, 128);
             sourceRect = new Rectangle(0, 0, 64, 64);
-            BPM = 105;
+            BPM = 90;
             timer = 0;
             ogSize = ContainerRect.Height;
             newSize = ContainerRect.Height + 50;
