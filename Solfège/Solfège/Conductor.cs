@@ -55,18 +55,6 @@ namespace Solfège
         {
             Vector2 screenPos = Position - camera.Position;
             spriteBatch.Draw(texture, screenPos, Color.White);
-
-
-
-            // Draw bar background and fill using a simple colored rectangle trick
-            Texture2D pixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
-            pixel.SetData(new[] { Color.White });
-
-
-
-            // HP text
-            spriteBatch.DrawString(font, "HP: " + Health + "/" + MaxHealth, new Vector2(10, 10), Color.Red);
-
         }
     }
 }
