@@ -17,7 +17,7 @@ namespace Solfège
         public int MapHeightPixels = MapTilesTall * TileHeight;
 
         private Texture2D floorTile;  // light gray
-        private Texture2D gridLine;   // dark gray for grid lines
+
 
         public Map(ContentManager content, GraphicsDevice graphicsDevice)
         {
