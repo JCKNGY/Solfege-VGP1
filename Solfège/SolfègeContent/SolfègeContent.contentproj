@@ -36,7 +36,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="sprites\ConductorFront.png">
+    <Compile Include="sprites\Character Sprite\ConductorFront.png">
       <Name>ConductorFront</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
@@ -100,6 +100,45 @@
       <Name>TitleMusic</Name>
       <Importer>Mp3Importer</Importer>
       <Processor>SongProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="sprites\Weapon Sprites\Flute.png">
+      <Name>Flute</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="sprites\Weapon Sprites\Saxaphone.png">
+      <Name>Saxaphone</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="sprites\Weapon Sprites\Trumpet.png">
+      <Name>Trumpet</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="sprites\Weapon Sprites\Violin.png">
+      <Name>Violin</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="sprites\Projectiles\2Eights.png">
+      <Name>2Eights</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="sprites\Projectiles\EigthNote.png">
+      <Name>EigthNote</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="sprites\Projectiles\TrebleClef.png">
+      <Name>TrebleClef</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
