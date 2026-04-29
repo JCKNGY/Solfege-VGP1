@@ -33,9 +33,13 @@ namespace Solfège
     {
         public GameScreen CurrentScreen { get; private set; } = GameScreen.Title;
 
-        public float MusicVolume { get; private set; } = 0.70f;
-        public float SfxVolume { get; private set; } = 0.80f;
-        public float MasterVolume { get; private set; } = 1.00f;
+        private int musicPct = 100;
+        private int sfxPct = 100;
+        private int masterPct = 100;
+
+        public float MusicVolume { get { return musicPct / 100f; } }
+        public float SfxVolume { get { return sfxPct / 100f; } }
+        public float MasterVolume { get { return masterPct / 100f; } }
 
         public bool ScreenShake { get; private set; } = true;
         public bool MetronomePulse { get; private set; } = true;
@@ -56,6 +60,14 @@ namespace Solfège
         private int menuIndex = 0;
         private KeyboardState prevKb = default;
 
+        private float holdTimer = 0f;
+        private float holdDelay = 0.4f;
+        private float holdRepeat = 0.08f;
+        private bool holdingLeft = false;
+        private bool holdingRight = false;
+
+        private MouseState prevMouse = default;
+
         private float fadeIn = 0f;
         private const float FadeSpeed = 1.2f;
 
@@ -65,6 +77,7 @@ namespace Solfège
 
         private List<TitleNote> notes = new List<TitleNote>();
         private Random rng = new Random();
+        private Rectangle[] sliderRects = new Rectangle[3];
 
         private static readonly char[] NoteChars = { 'Q', 'S', 'B', 'B' };
         private const int NoteCount = 30;
@@ -112,6 +125,15 @@ namespace Solfège
             n.Phase = (float)rng.NextDouble() * MathHelper.TwoPi;
             n.DriftX = ((float)rng.NextDouble() - 0.5f) * 12f;
             return n;
+        }
+
+        public void ForceScreen(GameScreen screen)
+        {
+            CurrentScreen = screen;
+            if (screen == GameScreen.Title)
+                fadeIn = 0f;
+            if (screen == GameScreen.Settings)
+                settingsFocus = 0;
         }
 
         public void Update(GameTime gameTime)
@@ -183,31 +205,64 @@ namespace Solfège
 
         private void UpdateSettingsInput(KeyboardState kb)
         {
+            float dt = (float)(1.0 / 60.0);
+
             if (JustPressed(kb, Keys.Down) || JustPressed(kb, Keys.S))
                 settingsFocus = Math.Min(settingsFocus + 1, 4);
             if (JustPressed(kb, Keys.Up) || JustPressed(kb, Keys.W))
                 settingsFocus = Math.Max(settingsFocus - 1, 0);
 
-            float nudge = 0f;
-            if (JustPressed(kb, Keys.Left) || JustPressed(kb, Keys.A))
-                nudge = -0.05f;
-            else if (JustPressed(kb, Keys.Right) || JustPressed(kb, Keys.D))
-                nudge = 0.05f;
+            bool leftDown = kb.IsKeyDown(Keys.Left) || kb.IsKeyDown(Keys.A);
+            bool rightDown = kb.IsKeyDown(Keys.Right) || kb.IsKeyDown(Keys.D);
 
-            if (nudge != 0f)
+            bool stepLeft = false;
+            bool stepRight = false;
+
+            if (leftDown || rightDown)
             {
+                bool dirChanged = (leftDown && !holdingLeft) || (rightDown && !holdingRight);
+                if (dirChanged)
+                {
+                    holdTimer = 0f;
+                    holdingLeft = leftDown;
+                    holdingRight = rightDown;
+                    stepLeft = leftDown;
+                    stepRight = rightDown;
+                }
+                else
+                {
+                    holdTimer += dt;
+                    float threshold = holdTimer < holdDelay ? holdDelay : holdRepeat;
+                    if (holdTimer >= threshold)
+                    {
+                        holdTimer -= holdRepeat;
+                        stepLeft = leftDown;
+                        stepRight = rightDown;
+                    }
+                }
+            }
+            else
+            {
+                holdingLeft = false;
+                holdingRight = false;
+                holdTimer = 0f;
+            }
+
+            if (stepLeft || stepRight)
+            {
+                int delta = stepRight ? 5 : -5;
                 if (settingsFocus == 0)
                 {
-                    MusicVolume = MathHelper.Clamp(MusicVolume + nudge, 0f, 1f);
+                    musicPct = Math.Max(0, Math.Min(100, musicPct + delta));
                     ApplyVolumes();
                 }
                 else if (settingsFocus == 1)
                 {
-                    SfxVolume = MathHelper.Clamp(SfxVolume + nudge, 0f, 1f);
+                    sfxPct = Math.Max(0, Math.Min(100, sfxPct + delta));
                 }
                 else if (settingsFocus == 2)
                 {
-                    MasterVolume = MathHelper.Clamp(MasterVolume + nudge, 0f, 1f);
+                    masterPct = Math.Max(0, Math.Min(100, masterPct + delta));
                     ApplyVolumes();
                 }
                 else if (settingsFocus == 3)
@@ -220,6 +275,38 @@ namespace Solfège
                 }
             }
 
+            MouseState mouse = Mouse.GetState();
+
+            bool mouseClicked = mouse.LeftButton == ButtonState.Pressed && prevMouse.LeftButton == ButtonState.Released;
+
+            if (mouseClicked)
+            {
+                int panelW = 480;
+                int panelX = SW / 2 - panelW / 2;
+                int sliderX = panelX + 130;
+                int sliderW = panelW - 200;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    if (sliderRects[i] != Rectangle.Empty)
+                    {
+                        Rectangle hit = new Rectangle(sliderRects[i].X, sliderRects[i].Y - 10, sliderRects[i].Width, sliderRects[i].Height + 20);
+                        if (hit.Contains(mouse.X, mouse.Y))
+                        {
+                            float ratio = MathHelper.Clamp((float)(mouse.X - sliderX) / sliderW, 0f, 1f);
+                            int pct = (int)Math.Round(ratio * 20f) * 5;
+                            pct = Math.Max(0, Math.Min(100, pct));
+                            settingsFocus = i;
+                            if (i == 0) { musicPct = pct; ApplyVolumes(); }
+                            else if (i == 1) { sfxPct = pct; }
+                            else if (i == 2) { masterPct = pct; ApplyVolumes(); }
+                        }
+                    }
+                }
+            }
+
+            prevMouse = mouse;
+
             if (JustPressed(kb, Keys.Enter) || JustPressed(kb, Keys.Space))
             {
                 if (settingsFocus == 3) ScreenShake = !ScreenShake;
@@ -229,6 +316,8 @@ namespace Solfège
             if (JustPressed(kb, Keys.Escape))
                 CurrentScreen = GameScreen.Title;
         }
+
+
 
         private void ApplyVolumes()
         {
@@ -373,6 +462,9 @@ namespace Solfège
             int sliderX = panelX + 130;
             int sliderW = panelW - 200;
             int valX = panelX + panelW - 55;
+
+            if (focusId >= 0 && focusId < sliderRects.Length)
+                sliderRects[focusId] = new Rectangle(sliderX, y, sliderW, 12);
 
             Color rowColor = ColMuted;
             if (focused) rowColor = ColWhite;
