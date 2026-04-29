@@ -195,10 +195,12 @@ namespace Solfège
             }
             else if (pauseIndex == 1)
             {
+                titleScreen.ForceScreen(GameScreen.Settings);
                 currentScreen = GameScreen.Settings;
             }
             else if (pauseIndex == 2)
             {
+                titleScreen.ForceScreen(GameScreen.Title);
                 currentScreen = GameScreen.Title;
                 Conductor.Health = Conductor.MaxHealth;
                 Conductor.IsAlive = true;
@@ -259,7 +261,9 @@ namespace Solfège
 
                 string sub = "Press ENTER to return to title";
                 Vector2 subSz = font.MeasureString(sub);
-                spriteBatch.DrawString(font, sub, new Vector2(ScreenWidth / 2f - subSz.X / 2f, ScreenHeight / 2f + 40),new Color(107, 102, 88));
+                spriteBatch.DrawString(font, sub,
+                    new Vector2(ScreenWidth / 2f - subSz.X / 2f, ScreenHeight / 2f + 40),
+                    new Color(107, 102, 88));
 
                 spriteBatch.End();
             }
