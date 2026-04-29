@@ -18,17 +18,6 @@ namespace Solfège
         GameOver
     }
 
-    internal class TitleNote
-    {
-        public Vector2 Position;
-        public float Speed;
-        public float Alpha;
-        public float Size;
-        public char Glyph;
-        public float Phase;
-        public float DriftX;
-    }
-
     public class TitleScreen
     {
         public GameScreen CurrentScreen { get; private set; } = GameScreen.Title;
@@ -74,13 +63,8 @@ namespace Solfège
         private float glowTimer = 0f;
 
         private int settingsFocus = -1;
-
-        private List<TitleNote> notes = new List<TitleNote>();
         private Random rng = new Random();
         private Rectangle[] sliderRects = new Rectangle[3];
-
-        private static readonly char[] NoteChars = { 'Q', 'S', 'B', 'B' };
-        private const int NoteCount = 30;
 
         private float time = 0f;
 
@@ -105,27 +89,10 @@ namespace Solfège
 
             logoTexture = content.Load<Texture2D>("sprites/Ui/solfegeTitle");
 
-            SpawnNotes();
+           
         }
 
-        private void SpawnNotes()
-        {
-            for (int i = 0; i < NoteCount; i++)
-                notes.Add(MakeNote((float)rng.NextDouble() * SH));
-        }
 
-        private TitleNote MakeNote(float startY)
-        {
-            TitleNote n = new TitleNote();
-            n.Position = new Vector2((float)rng.NextDouble() * SW, startY);
-            n.Speed = 14f + (float)rng.NextDouble() * 22f;
-            n.Alpha = 0.03f + (float)rng.NextDouble() * 0.09f;
-            n.Size = 0.4f + (float)rng.NextDouble() * 0.8f;
-            n.Glyph = NoteChars[rng.Next(NoteChars.Length)];
-            n.Phase = (float)rng.NextDouble() * MathHelper.TwoPi;
-            n.DriftX = ((float)rng.NextDouble() - 0.5f) * 12f;
-            return n;
-        }
 
         public void ForceScreen(GameScreen screen)
         {
@@ -144,21 +111,7 @@ namespace Solfège
             glowTimer += dt;
             fadeIn = Math.Min(1f, fadeIn + dt * FadeSpeed);
 
-            foreach (TitleNote n in notes)
-            {
-                n.Position.Y -= n.Speed * dt;
-                n.Position.X += (float)Math.Sin(time * 0.6f + n.Phase) * n.DriftX * dt;
-                if (n.Position.Y < -40)
-                {
-                    TitleNote fresh = MakeNote(SH + 20);
-                    n.Position = fresh.Position;
-                    n.Speed = fresh.Speed;
-                    n.Alpha = fresh.Alpha;
-                    n.Size = fresh.Size;
-                    n.Glyph = fresh.Glyph;
-                    n.Phase = fresh.Phase;
-                }
-            }
+            
 
             if (CurrentScreen == GameScreen.Title)
                 UpdateTitleInput(kb);
@@ -329,24 +282,12 @@ namespace Solfège
         {
             sb.Draw(pixel, new Rectangle(0, 0, SW, SH), ColInk);
 
-            DrawFloatingNotes(sb);
+            
 
             if (CurrentScreen == GameScreen.Title)
                 DrawTitle(sb);
             else if (CurrentScreen == GameScreen.Settings)
                 DrawSettings(sb);
-        }
-
-        private void DrawFloatingNotes(SpriteBatch sb)
-        {
-            if (titleFont == null) return;
-            foreach (TitleNote n in notes)
-            {
-                string glyph = n.Glyph.ToString();
-                Vector2 sz = titleFont.MeasureString(glyph) * n.Size;
-                Vector2 pos = new Vector2(n.Position.X - sz.X / 2f, n.Position.Y - sz.Y / 2f);
-                sb.DrawString(titleFont, glyph, pos, ColGold * n.Alpha, 0f, Vector2.Zero, n.Size, SpriteEffects.None, 0f);
-            }
         }
 
         private void DrawTitle(SpriteBatch sb)
@@ -417,11 +358,6 @@ namespace Solfège
             sb.Draw(pixel, new Rectangle(panelX, panelY, panelW, panelH), ColDeep);
 
             DrawBorder(sb, new Rectangle(panelX, panelY, panelW, panelH), ColGold * 0.35f, 1);
-
-            DrawCorner(sb, new Vector2(panelX + 12, panelY + 12), true, true);
-            DrawCorner(sb, new Vector2(panelX + panelW - 12, panelY + 12), false, true);
-            DrawCorner(sb, new Vector2(panelX + 12, panelY + panelH - 12), true, false);
-            DrawCorner(sb, new Vector2(panelX + panelW - 12, panelY + panelH - 12), false, false);
 
             float cx = panelX + panelW / 2f;
             float cy = panelY + 40;
@@ -533,12 +469,12 @@ namespace Solfège
             int thickness = 1;
             sb.Draw(pixel,
                     new Rectangle((int)(center.X - halfWidth), (int)center.Y, halfWidth * 2, thickness),
-                    ColGold * 0.35f * alpha);
+                    ColGold * 0.5f * alpha);
 
             int ds = 5;
             sb.Draw(pixel,
                     new Rectangle((int)center.X - ds / 2, (int)center.Y - ds / 2 + thickness / 2, ds, ds),
-                    ColGold * 0.6f * alpha);
+                    ColGold * 0.5f * alpha);
         }
 
         private void DrawBorder(SpriteBatch sb, Rectangle r, Color c, int thickness)
@@ -547,18 +483,6 @@ namespace Solfège
             sb.Draw(pixel, new Rectangle(r.X, r.Bottom, r.Width, thickness), c);
             sb.Draw(pixel, new Rectangle(r.X, r.Y, thickness, r.Height), c);
             sb.Draw(pixel, new Rectangle(r.Right, r.Y, thickness, r.Height), c);
-        }
-
-        private void DrawCorner(SpriteBatch sb, Vector2 pos, bool left, bool top)
-        {
-            int len = 14, t = 1;
-            int sx = (int)pos.X;
-            if (!left) sx = (int)pos.X - len;
-            int sy = (int)pos.Y;
-            if (!top) sy = (int)pos.Y - len;
-            Color c = ColGold * 0.4f;
-            sb.Draw(pixel, new Rectangle(sx, sy, len, t), c);
-            sb.Draw(pixel, new Rectangle(sx, sy, t, len), c);
         }
 
         private bool JustPressed(KeyboardState kb, Keys key)
