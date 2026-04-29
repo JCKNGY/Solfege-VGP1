@@ -13,6 +13,8 @@ namespace Solfège
 {
     public class Game1 : Microsoft.Xna.Framework.Game
     {
+
+        
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
@@ -48,6 +50,10 @@ namespace Solfège
         private string[] pauseLabels = { "Resume", "Settings", "Quit to Title" };
         private int pauseIndex = 0;
         private float pauseGlowTimer = 0f;
+
+
+
+
 
         public Game1()
         {
@@ -97,7 +103,7 @@ namespace Solfège
             MediaPlayer.Volume = 1f;
             MediaPlayer.Play(titleMusic);
         }
-
+        //Set everything to standard
         private void StartGame()
         {
             currentScreen = GameScreen.Playing;
@@ -105,7 +111,7 @@ namespace Solfège
             ApplyAudioSettings();
             MediaPlayer.Play(gameMusic);
         }
-
+        
         private void ApplyAudioSettings()
         {
             if (titleScreen == null) return;
@@ -145,14 +151,18 @@ namespace Solfège
 
                     waveManager.Update(gameTime, Conductor.Position, Conductor);
                     if (!waveManager.WaveActive)
+                    {
                         waveManager.StartNextWave(Conductor.Position);
+                    }
 
-                    CollisionManager.Update(Conductor, waveManager);
+                        CollisionManager.Update(Conductor, waveManager);
 
                     if (!Conductor.IsAlive)
+                    {
                         currentScreen = GameScreen.GameOver;
+                    }
+                    }
                 }
-            }
             else if (currentScreen == GameScreen.Paused)
             {
                 pauseGlowTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -183,12 +193,9 @@ namespace Solfège
                 return;
             }
 
-            bool up = (!oldKb.IsKeyDown(Keys.Up) && kb.IsKeyDown(Keys.Up)) ||
-                      (!oldKb.IsKeyDown(Keys.W) && kb.IsKeyDown(Keys.W));
-            bool down = (!oldKb.IsKeyDown(Keys.Down) && kb.IsKeyDown(Keys.Down)) ||
-                        (!oldKb.IsKeyDown(Keys.S) && kb.IsKeyDown(Keys.S));
-            bool enter = (!oldKb.IsKeyDown(Keys.Enter) && kb.IsKeyDown(Keys.Enter)) ||
-                         (!oldKb.IsKeyDown(Keys.Space) && kb.IsKeyDown(Keys.Space));
+            bool up = (!oldKb.IsKeyDown(Keys.Up) && kb.IsKeyDown(Keys.Up)) ||(!oldKb.IsKeyDown(Keys.W) && kb.IsKeyDown(Keys.W));
+            bool down = (!oldKb.IsKeyDown(Keys.Down) && kb.IsKeyDown(Keys.Down)) ||(!oldKb.IsKeyDown(Keys.S) && kb.IsKeyDown(Keys.S));
+            bool enter = (!oldKb.IsKeyDown(Keys.Enter) && kb.IsKeyDown(Keys.Enter)) || (!oldKb.IsKeyDown(Keys.Space) && kb.IsKeyDown(Keys.Space));
 
             if (up)
                 pauseIndex = (pauseIndex - 1 + pauseLabels.Length) % pauseLabels.Length;
@@ -268,22 +275,18 @@ namespace Solfège
 
                 string msg = "GAME OVER";
                 Vector2 sz = font.MeasureString(msg);
-                spriteBatch.DrawString(font, msg,
-                    new Vector2(ScreenWidth / 2f - sz.X / 2f, ScreenHeight / 2f - sz.Y / 2f),
-                    Color.Red);
+                spriteBatch.DrawString(font, msg,new Vector2(ScreenWidth / 2f - sz.X / 2f, ScreenHeight / 2f - sz.Y / 2f),Color.Red);
 
                 string sub = "Press ENTER to return to title";
                 Vector2 subSz = font.MeasureString(sub);
-                spriteBatch.DrawString(font, sub,
-                    new Vector2(ScreenWidth / 2f - subSz.X / 2f, ScreenHeight / 2f + 40),
-                    new Color(107, 102, 88));
+                spriteBatch.DrawString(font, sub,new Vector2(ScreenWidth / 2f - subSz.X / 2f, ScreenHeight / 2f + 40), new Color(107, 102, 88));
 
                 spriteBatch.End();
             }
 
             base.Draw(gameTime);
         }
-
+        //Just pop out the pause menu when esc is pressed.
         private void DrawPauseOverlay(SpriteBatch sb)
         {
             sb.Draw(pixel, new Rectangle(0, 0, ScreenWidth, ScreenHeight), Color.Black * 0.60f);
@@ -294,13 +297,6 @@ namespace Solfège
             int panelY = ScreenHeight / 2 - panelH / 2;
 
             sb.Draw(pixel, new Rectangle(panelX, panelY, panelW, panelH), ColDeep);
-
-            DrawBorder(sb, new Rectangle(panelX, panelY, panelW, panelH), ColGold * 0.35f, 1);
-
-            DrawCorner(sb, new Vector2(panelX + 12, panelY + 12), true, true);
-            DrawCorner(sb, new Vector2(panelX + panelW - 12, panelY + 12), false, true);
-            DrawCorner(sb, new Vector2(panelX + 12, panelY + panelH - 12), true, false);
-            DrawCorner(sb, new Vector2(panelX + panelW - 12, panelY + panelH - 12), false, false);
 
             float cx = panelX + panelW / 2f;
 
@@ -318,13 +314,25 @@ namespace Solfège
                 bool selected = (i == pauseIndex);
 
                 float itemAlpha = 0.45f;
-                if (selected) itemAlpha = 1f;
+                if (selected)
+                {
+                    itemAlpha = 1f;
+                }
+
 
                 Color labelColor = ColMuted;
-                if (selected) labelColor = ColWhite;
+                if (selected)
+                {
+                    labelColor = ColWhite;
+                }
+
 
                 float scale = 1.0f;
-                if (selected) scale = 1.05f;
+                if (selected)
+                {
+                    scale = 1.05f;
+                }
+
 
                 string label = pauseLabels[i].ToUpper();
                 Vector2 labelSz = menuFont.MeasureString(label) * scale;
@@ -337,9 +345,7 @@ namespace Solfège
                     float dotX = x - 22;
                     float dotY = y + labelSz.Y / 2f;
                     int dotSize = 7;
-                    sb.Draw(pixel,
-                        new Rectangle((int)(dotX - dotSize / 2), (int)(dotY - dotSize / 2), dotSize, dotSize),
-                        ColGold * glow);
+                    sb.Draw(pixel, new Rectangle((int)(dotX - dotSize / 2), (int)(dotY - dotSize / 2), dotSize, dotSize), ColGold * glow);
                 }
 
                 sb.DrawString(menuFont, label, new Vector2(x, y), labelColor * itemAlpha, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
@@ -349,42 +355,17 @@ namespace Solfège
             {
                 string hint = "ESC to resume     ENTER to select";
                 Vector2 hSz = font.MeasureString(hint);
-                sb.DrawString(font, hint,
-                    new Vector2(cx - hSz.X / 2f, panelY + panelH - 30),
-                    ColMuted * 0.55f);
+                sb.DrawString(font, hint, new Vector2(cx - hSz.X / 2f, panelY + panelH - 30), ColMuted * 0.55f);
             }
         }
 
-        private void DrawBorder(SpriteBatch sb, Rectangle r, Color c, int thickness)
-        {
-            sb.Draw(pixel, new Rectangle(r.X, r.Y, r.Width, thickness), c);
-            sb.Draw(pixel, new Rectangle(r.X, r.Bottom, r.Width, thickness), c);
-            sb.Draw(pixel, new Rectangle(r.X, r.Y, thickness, r.Height), c);
-            sb.Draw(pixel, new Rectangle(r.Right, r.Y, thickness, r.Height), c);
-        }
-
-        private void DrawCorner(SpriteBatch sb, Vector2 pos, bool left, bool top)
-        {
-            int len = 14, t = 1;
-            int sx = (int)pos.X;
-            if (!left) sx = (int)pos.X - len;
-            int sy = (int)pos.Y;
-            if (!top) sy = (int)pos.Y - len;
-            Color c = ColGold * 0.4f;
-            sb.Draw(pixel, new Rectangle(sx, sy, len, t), c);
-            sb.Draw(pixel, new Rectangle(sx, sy, t, len), c);
-        }
-
+        //Basically the Line under the main logo
         private void DrawHorizontalRule(SpriteBatch sb, Vector2 center, int halfWidth, float alpha)
         {
             int thickness = 1;
-            sb.Draw(pixel,
-                new Rectangle((int)(center.X - halfWidth), (int)center.Y, halfWidth * 2, thickness),
-                ColGold * 0.35f * alpha);
+            sb.Draw(pixel, new Rectangle((int)(center.X - halfWidth), (int)center.Y, halfWidth * 2, thickness), ColGold * 0.35f * alpha);
             int ds = 5;
-            sb.Draw(pixel,
-                new Rectangle((int)center.X - ds / 2, (int)center.Y - ds / 2 + thickness / 2, ds, ds),
-                ColGold * 0.6f * alpha);
+            sb.Draw(pixel,new Rectangle((int)center.X - ds / 2, (int)center.Y - ds / 2 + thickness / 2, ds, ds), ColGold * 0.6f * alpha);
         }
     }
 }

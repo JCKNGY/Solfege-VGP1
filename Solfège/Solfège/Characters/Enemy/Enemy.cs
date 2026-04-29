@@ -18,40 +18,40 @@ namespace Solfège
         public bool IsAlive = true;
         public EnemyType Type;
 
-        private int health;
-        private int maxHealth;
-        private int damage;
-        private float moveSpeed;
+        public int health;
+        public int maxHealth;
+        public int damage;
+        public float moveSpeed;
 
-        private Texture2D texture;
-        private Texture2D healthBarBg;
-        private Texture2D healthBarFill;
-
-
-        private float damageCooldown = 0f;
-        private const float DamageCooldownMax = 1.0f;
+        public Texture2D texture;
+        public Texture2D healthBarBg;
+        public Texture2D healthBarFill;
 
 
-        private Vector2 knockbackVelocity = Vector2.Zero;
-        private const float KnockbackDecay = 8f;
+        public float damageCooldown = 0f;
+        public const float DamageCooldownMax = 1.0f;
 
 
-        private float shootTimer = 0f;
-        private float shootCooldown = 2.5f;
-        private const float ShootRange = 350f;
+        public Vector2 knockbackVelocity = Vector2.Zero;
+        public const float KnockbackDecay = 8f;
 
 
-        private float slamTimer = 0f;
-        private float slamCooldown = 3.0f;
-        private const float SlamRange = 60f;
-        public bool JustSlammed = false; 
+        public float shootTimer = 0f;
+        public float shootCooldown = 2.5f;
+        public const float ShootRange = 350f;
 
 
-        private float spawnScale = 0.1f;
-        private bool spawning = true;
+        public float slamTimer = 0f;
+        public float slamCooldown = 3.0f;
+        public const float SlamRange = 60f;
+        public bool JustSlammed = false;
 
 
-        private float hitFlash = 0f;
+        public float spawnScale = 0.1f;
+        public bool spawning = true;
+
+
+        public float hitFlash = 0f;
 
 
         public Vector2 SeparationForce = Vector2.Zero;
@@ -93,16 +93,16 @@ namespace Solfège
             health = maxHealth;
 
 
-            Color bodyColor = type == EnemyType.Melee ? new Color(220, 60, 60) :
-                              type == EnemyType.Projectile ? new Color(230, 140, 40) :
-                                                             new Color(120, 60, 200);
+            Color bodyColor = type == EnemyType.Melee ? new Color(220, 60, 60) :type == EnemyType.Projectile ? new Color(230, 140, 40) :new Color(120, 60, 200);
 
             int w = (int)Size.X, h = (int)Size.Y;
             texture = new Texture2D(graphicsDevice, w, h);
             Color[] pixels = new Color[w * h];
             for (int i = 0; i < pixels.Length; i++)
+            {
                 pixels[i] = bodyColor;
-            texture.SetData(pixels);
+            }
+                texture.SetData(pixels);
 
 
             healthBarBg = new Texture2D(graphicsDevice, 1, 1);
@@ -247,14 +247,7 @@ namespace Solfège
             if (spawning && spawnScale < 1f)
             {
                 Vector2 origin = Size / 2f;
-                spriteBatch.Draw(
-                    texture,
-                    screenPos + origin,
-                    null,
-                    hitFlash > 0f ? Color.White : Color.White,
-                    0f,
-                    origin,
-                    spawnScale,
+                spriteBatch.Draw(texture,screenPos + origin,null,hitFlash > 0f ? Color.White : Color.White,0f,origin,spawnScale,
                     SpriteEffects.None,
                     0f
                 );
@@ -281,13 +274,13 @@ namespace Solfège
         public Vector2 Position;
         public bool IsAlive = true;
 
-        private Vector2 velocity;
-        private const float Speed = 200f;
-        private const float Lifetime = 3.5f;
-        private float timeAlive = 0f;
-        private int damage;
+        public Vector2 velocity;
+        public const float Speed = 200f;
+        public const float Lifetime = 3.5f;
+        public float timeAlive = 0f;
+        public int damage;
 
-        private static readonly Vector2 Size = new Vector2(12, 12);
+        public static readonly Vector2 Size = new Vector2(12, 12);
 
         public EnemyProjectile(Vector2 origin, Vector2 target, int dmg)
         {
@@ -295,8 +288,11 @@ namespace Solfège
             damage = dmg;
 
             Vector2 dir = target - origin;
-            if (dir.Length() > 0f) dir.Normalize();
-            velocity = dir * Speed;
+            if (dir.Length() > 0f)
+            {
+                dir.Normalize();
+            }
+                velocity = dir * Speed;
         }
 
         public void Update(GameTime gameTime)
@@ -327,7 +323,7 @@ namespace Solfège
         {
             if (!IsAlive) return;
             Vector2 screenPos = Position - camera.Position;
-            spriteBatch.Draw(pixel, new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)Size.X, (int)Size.Y), Color.Orange);
+            spriteBatch.Draw(pixel, new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)Size.X, (int)Size.Y), Color.Red);
         }
     }
 }

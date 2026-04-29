@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Solfège
+namespace Solfège.Combat_System
 {
-    class GameStateManager
+    class Shockwave
     {
     }
 }

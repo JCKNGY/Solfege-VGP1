@@ -14,30 +14,30 @@ namespace Solfège
         public int CoinsEarned { get; private set; } = 0;
 
 
-        private List<Enemy> enemies = new List<Enemy>();
-        private List<EnemyProjectile> projectiles = new List<EnemyProjectile>();
+        public List<Enemy> enemies = new List<Enemy>();
+        public List<EnemyProjectile> projectiles = new List<EnemyProjectile>();
 
         //Spawn control
-        private int enemiesToSpawn = 0;
-        private int spawnedThisWave = 0;
-        private float spawnTimer = 0f;
-        private float spawnInterval = 2.0f;
+        public int enemiesToSpawn = 0;
+        public int spawnedThisWave = 0;
+        public float spawnTimer = 0f;
+        public float spawnInterval = 2.0f;
 
 
-        private const int SpawnMargin = 100;
-        private const int ScreenWidth = 1280;
-        private const int ScreenHeight = 720;
+        public const int SpawnMargin = 100;
+        public const int ScreenWidth = 1280;
+        public const int ScreenHeight = 720;
 
-        private List<Shockwave> shockwaves = new List<Shockwave>();
-
-
-        private Texture2D pixel;
-        private GraphicsDevice graphicsDevice;
-
-        private Random rng = new Random();
+        public List<Shockwave> shockwaves = new List<Shockwave>();
 
 
-        private List<DroppedCoin> coins = new List<DroppedCoin>();
+        public Texture2D pixel;
+        public GraphicsDevice graphicsDevice;
+
+        public Random rng = new Random();
+
+
+        public List<DroppedCoin> coins = new List<DroppedCoin>();
 
         public WaveManager(GraphicsDevice gd)
         {
@@ -186,7 +186,7 @@ namespace Solfège
             foreach (Shockwave s in shockwaves)
                 s.Draw(spriteBatch, camera, pixel);
 
-            // Off-screen enemy arrows (like Blooket / survivors-style)
+            
             DrawOffscreenIndicators(spriteBatch, camera);
         }
 
@@ -271,9 +271,7 @@ namespace Solfège
                 float ay = Math.Max(Pad, Math.Min(ScreenHeight - Pad, screenPos.Y));
 
 
-                Color arrowColor = e.Type == EnemyType.Melee ? Color.Red :
-                                   e.Type == EnemyType.Projectile ? Color.Orange :
-                                                                       Color.Purple;
+                Color arrowColor = e.Type == EnemyType.Melee ? Color.Red :e.Type == EnemyType.Projectile ? Color.Orange : Color.Purple;
 
 
                 float angle = (float)Math.Atan2(screenPos.Y - ay, screenPos.X - ax);
@@ -283,30 +281,16 @@ namespace Solfège
 
         private void DrawArrow(SpriteBatch spriteBatch, Vector2 pos, float angle, Color color)
         {
-
-            const int size = 12;
-            spriteBatch.Draw(
-                pixel,
-                new Rectangle((int)pos.X - size / 2, (int)pos.Y - size / 2, size, size),
-                null,
-                color,
-                angle,
-                new Vector2(0.5f, 0.5f),
-                SpriteEffects.None,
-                0f
-            );
+            spriteBatch.Draw(pixel,new Rectangle((int)pos.X - 6, (int)pos.Y - 6, 12, 12),null,color,angle,new Vector2(0.5f, 0.5f),SpriteEffects.None,0f);
         }
 
 
         private void SpawnCoinDrop(Vector2 pos, int value)
         {
-
             int count = Math.Max(1, value / 2);
             for (int i = 0; i < count; i++)
             {
-                Vector2 offset = new Vector2(
-                    (float)(rng.NextDouble() - 0.5) * 40,
-                    (float)(rng.NextDouble() - 0.5) * 40);
+                Vector2 offset = new Vector2((float)(rng.NextDouble() - 0.5) * 40,(float)(rng.NextDouble() - 0.5) * 40);
                 coins.Add(new DroppedCoin(pos + offset, value));
             }
         }
@@ -375,14 +359,7 @@ namespace Solfège
                 float px = screenCenter.X + (float)Math.Cos(angle) * currentRadius;
                 float py = screenCenter.Y + (float)Math.Sin(angle) * currentRadius;
 
-                spriteBatch.Draw(pixel,
-                    new Rectangle((int)px - 3, (int)py - 3, 6, 6),
-                    null,
-                    ringColor,
-                    angle,
-                    Vector2.Zero,
-                    SpriteEffects.None,
-                    0f);
+                spriteBatch.Draw(pixel, new Rectangle((int)px - 3, (int)py - 3, 6, 6), null, ringColor,angle, Vector2.Zero, SpriteEffects.None, 0f);
             }
         }
     }
@@ -396,11 +373,11 @@ namespace Solfège
 
         public Vector2 Position;
 
-        private float lifetime = 10f;
-        private float timeAlive = 0f;
-        private const float PickupRadius = 60f;
-        private const float AttractRadius = 90f;
-        private const float AttractSpeed = 300f;
+        public float lifetime = 10f;
+        public float timeAlive = 0f;
+        public const float PickupRadius = 60f;
+        public const float AttractRadius = 90f;
+        public const float AttractSpeed = 300f;
 
         public DroppedCoin(Vector2 pos, int value)
         {
