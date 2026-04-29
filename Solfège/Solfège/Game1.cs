@@ -34,6 +34,9 @@ namespace Solfège
         SpriteFont titleFont;
         SpriteFont menuFont;
 
+        private Song titleMusic;
+        private Song gameMusic;
+
         KeyboardState oldKb;
 
         private static readonly Color ColGold = new Color(201, 168, 76);
@@ -86,6 +89,13 @@ namespace Solfège
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.White });
+
+            titleMusic = Content.Load<Song>("Music/TitleMusic");
+            gameMusic = Content.Load<Song>("Music/GameMusic");
+
+            MediaPlayer.IsRepeating = true;
+            MediaPlayer.Volume = 1f;
+            MediaPlayer.Play(titleMusic);
         }
 
         private void StartGame()
@@ -93,6 +103,7 @@ namespace Solfège
             currentScreen = GameScreen.Playing;
             waveManager.StartNextWave(Conductor.Position);
             ApplyAudioSettings();
+            MediaPlayer.Play(gameMusic);
         }
 
         private void ApplyAudioSettings()
@@ -156,6 +167,7 @@ namespace Solfège
                     Conductor.IsAlive = true;
                     Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
                     waveManager = new WaveManager(GraphicsDevice);
+                    MediaPlayer.Play(titleMusic);
                 }
             }
 
@@ -206,6 +218,7 @@ namespace Solfège
                 Conductor.IsAlive = true;
                 Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
                 waveManager = new WaveManager(GraphicsDevice);
+                MediaPlayer.Play(titleMusic);
             }
         }
 
