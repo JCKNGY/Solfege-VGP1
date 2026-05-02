@@ -147,16 +147,14 @@ namespace Solfège
                 {
                     Conductor.Update(gameTime, gp, kb, map);
                     camera.Update(Conductor.Position, Conductor.Size);
-                    metronome.Update(gameTime, Conductor);
+                    metronome.Update(gameTime);
 
                     waveManager.Update(gameTime, Conductor.Position, Conductor);
                     if (!waveManager.WaveActive)
                     {
                         waveManager.StartNextWave(Conductor.Position);
                     }
-
                         CollisionManager.Update(Conductor, waveManager);
-
                     if (!Conductor.IsAlive)
                     {
                         currentScreen = GameScreen.GameOver;

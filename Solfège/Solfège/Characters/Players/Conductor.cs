@@ -19,7 +19,7 @@ namespace Solfège
 
         public Conductor(ContentManager content, GraphicsDevice graphicsDevice)
         {
-            texture = content.Load<Texture2D>("sprites/ConductorFront");
+            texture = content.Load<Texture2D>("sprites/Character Sprite/ConductorFront");
             Size = new Vector2(texture.Width, texture.Height);
         }
 

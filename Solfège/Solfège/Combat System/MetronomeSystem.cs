@@ -1,110 +1,153 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 
 namespace Solfège
 {
-    class MetronomeSystem
+    public enum BeatRating
     {
-        Texture2D currenttexture;
-        Texture2D heartfulltexture;
-        Texture2D heartnearfulltexture;
-        Texture2D hearthalfwaytexture;
-        Texture2D heartneargonetexture;
-        Texture2D heartgonetexture;
-        Rectangle ContainerRect;
-        Rectangle sourceRect;
-        SpriteFont font;
-        double BPM;
-        double timer;
+        None,
+        Perfect,
+        Good,
+        Miss
+    }
 
-        SoundEffect hearbeat;
-        int ogSize;
-        int newSize;
+    public class MetronomeSystem
+    {
+        public Texture2D currentTexture;
+        public Texture2D heartFullTexture;
+        public Texture2D heartNearFullTexture;
+        public Texture2D heartHalfwayTexture;
+        public Texture2D heartNearGoneTexture;
+        public Texture2D heartGoneTexture;
 
-        double SPB;
-        //seconds per beat
+        public SpriteFont font;
+        public SoundEffect heartbeatSfx;
 
-        public MetronomeSystem(ContentManager content, GraphicsDevice graphicsDevice, int b)
+        public double BPM;
+        public double SPB;
+        public double beatTimer;
+
+        public double PerfectWindow = 0.150;
+        public double GoodWindow = 0.250;
+
+        public int Streak = 0;
+        public BeatRating LastRating = BeatRating.None;
+        public float ratingTimer = 0f;
+        public float RatingDuration = 1.5f;
+
+        public Texture2D pixel;
+        public Rectangle barBg;
+        public float beatPulse;
+
+        public Color PerfectColor = Color.Gold;
+        public Color GoodColor = Color.LimeGreen;
+        public Color MissColor = Color.Red;
+
+        public int screenW;
+        public int screenH;
+
+        public MetronomeSystem(ContentManager content, GraphicsDevice gd, int bpm)
         {
+            screenW = gd.Viewport.Width;
+            screenH = gd.Viewport.Height;
 
-            heartfulltexture = content.Load<Texture2D>("sprites/Ui/HeartFull");
-            heartnearfulltexture = content.Load<Texture2D>("sprites/Ui/Heart75");
-            hearthalfwaytexture = content.Load<Texture2D>("sprites/Ui/Heart50");
-            heartneargonetexture = content.Load<Texture2D>("sprites/Ui/Heart25");
-            heartgonetexture = content.Load<Texture2D>("sprites/Ui/HeartEmpty");
-            currenttexture = heartfulltexture;
+            BPM = bpm;
+            SPB = 60.0 / BPM;
+
+            heartFullTexture = content.Load<Texture2D>("sprites/Ui/HeartFull");
+            heartNearFullTexture = content.Load<Texture2D>("sprites/Ui/Heart75");
+            heartHalfwayTexture = content.Load<Texture2D>("sprites/Ui/Heart50");
+            heartNearGoneTexture = content.Load<Texture2D>("sprites/Ui/Heart25");
+            heartGoneTexture = content.Load<Texture2D>("sprites/Ui/HeartEmpty");
+            currentTexture = heartFullTexture;
 
             font = content.Load<SpriteFont>("Font");
-            hearbeat = content.Load<SoundEffect>("HeartBeat");
+            heartbeatSfx = content.Load<SoundEffect>("HeartBeat");
 
-            ContainerRect = new Rectangle(graphicsDevice.Viewport.Width / 2, 600, 128, 128);
-            sourceRect = new Rectangle(0, 0, 64, 64);
-            BPM = 104;
-            timer = 0;
-            ogSize = ContainerRect.Height;
-            newSize = ContainerRect.Height + 50;
+            barBg = new Rectangle(screenW / 2 - 250, screenH - 150, 500, 30);
 
+            pixel = new Texture2D(gd, 1, 1);
+            pixel.SetData(new[] { Color.White });
         }
 
-
-
-        public void Update(GameTime gameTime, Conductor player)
+        public BeatRating RegisterAction()
         {
-            timer += gameTime.ElapsedGameTime.TotalSeconds;
+            double dist = Math.Min(beatTimer, SPB - beatTimer);
+            BeatRating rating;
 
-            SPB = 60 / BPM;
-
-
-            if (player.Health >= 100)
+            if (dist <= PerfectWindow)
             {
-                currenttexture = heartfulltexture;
+                rating = BeatRating.Perfect;
             }
-            else if (player.Health <= 75 && player.Health > 50)
+            else if (dist <= GoodWindow)
             {
-                currenttexture = heartnearfulltexture;
-            }
-            else if (player.Health <= 50 && player.Health > 25)
-            {
-                currenttexture = hearthalfwaytexture;
-            }
-            else if (player.Health <= 25 && player.Health > 0)
-            {
-                currenttexture = heartneargonetexture;
-            }
-            else if (player.Health <= 0)
-            {
-                currenttexture = heartgonetexture;
-            }
-
-            if (timer >= SPB && player.IsAlive == true)
-            {
-                ContainerRect.Height = newSize;
-                ContainerRect.Width = newSize;
-                hearbeat.Play();
-                timer -= SPB;
-
+                rating = BeatRating.Good;
             }
             else
             {
-                ContainerRect.Height = ogSize;
-                ContainerRect.Width = ogSize;
+                rating = BeatRating.Miss;
             }
 
+            LastRating = rating;
+            ratingTimer = RatingDuration;
+
+            if (rating == BeatRating.Miss)
+            {
+                Streak = 0;
+            }
+            else
+            {
+                Streak++;
+            }
+
+            return rating;
         }
 
-
-        public void Draw(SpriteBatch spriteBatch)
+        public void Update(GameTime gameTime)
         {
-            spriteBatch.Draw(currenttexture, ContainerRect, sourceRect, Color.White, 0, new Vector2(64 / 2, 64 / 2), SpriteEffects.None, 0);
+            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            beatTimer += elapsed;
+
+            if (beatTimer >= SPB)
+            {
+                beatTimer -= SPB;
+                beatPulse = 1.0f;
+                heartbeatSfx.Play();
+            }
+
+            if (ratingTimer > 0)
+            {
+                ratingTimer -= elapsed;
+            }
+
+            beatPulse = MathHelper.Lerp(beatPulse, 0, elapsed * 5f);
+        }
+
+        public void Draw(SpriteBatch sb)
+        {
+            sb.Draw(pixel, barBg, Color.Black * 0.5f);
+
+            float phase = (float)(beatTimer / SPB);
+            int cursorX = barBg.X + (int)(phase * barBg.Width);
+
+            sb.Draw(pixel, new Rectangle(cursorX - 2, barBg.Y - 5, 4, barBg.Height + 10), Color.White);
+
+            if (Streak > 0)
+            {
+                string sText = "STREAK: " + Streak;
+                sb.DrawString(font, sText, new Vector2(barBg.X, barBg.Y - 40), Color.White);
+            }
+
+            if (ratingTimer > 0)
+            {
+                string rText = LastRating.ToString().ToUpper();
+                Color rCol = LastRating == BeatRating.Perfect ? PerfectColor : (LastRating == BeatRating.Good ? GoodColor : MissColor);
+
+                sb.DrawString(font, rText, new Vector2(barBg.X + barBg.Width - 100, barBg.Y - 40), rCol * (ratingTimer / RatingDuration));
+            }
         }
     }
 }
