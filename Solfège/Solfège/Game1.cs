@@ -14,7 +14,6 @@ namespace Solfège
     public class Game1 : Microsoft.Xna.Framework.Game
     {
 
-        
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
@@ -147,7 +146,7 @@ namespace Solfège
                 {
                     Conductor.Update(gameTime, gp, kb, map);
                     camera.Update(Conductor.Position, Conductor.Size);
-                    metronome.Update(gameTime);
+                    metronome.Update(gameTime, Conductor);
 
                     waveManager.Update(gameTime, Conductor.Position, Conductor);
                     if (!waveManager.WaveActive)

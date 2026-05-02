@@ -63,6 +63,7 @@
     <Compile Include="Characters\Players\Conductor.cs" />
     <Compile Include="Characters\Enemy\Enemy.cs" />
     <Compile Include="Combat System\EnemyProjectile.cs" />
+    <Compile Include="Combat System\Fluteweapon.cs" />
     <Compile Include="Combat System\InstrumentSpell.cs" />
     <Compile Include="Characters\Players\Map.cs" />
     <Compile Include="Combat System\MetronomeSystem.cs" />

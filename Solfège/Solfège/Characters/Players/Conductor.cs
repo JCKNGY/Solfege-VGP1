@@ -12,20 +12,36 @@ namespace Solfège
         public Vector2 Size;
 
         private const float MoveSpeed = 200f;
+        private const int BaseDamage = 20;
 
         public int MaxHealth = 100;
         public int Health = 100;
         public bool IsAlive = true;
 
+        private float attackCooldown = 0f;
+        private const float AttackRate = 0.30f;
+        public const float AttackRange = 180f;
+
+        public BeatRating LastAttackRating { get; private set; } = BeatRating.None;
+
+        private float attackFlash = 0f;
+
+        private KeyboardState prevKb;
+
+        // the flute weapon fires a music note shockwave on 3 consecutive perfects
+        public FluteWeapon Flute;
+
         public Conductor(ContentManager content, GraphicsDevice graphicsDevice)
         {
             texture = content.Load<Texture2D>("sprites/Character Sprite/ConductorFront");
             Size = new Vector2(texture.Width, texture.Height);
+            Flute = new FluteWeapon(content);
         }
 
         public void TakeDamage(int amount)
         {
             Health -= amount;
+
             if (Health <= 0)
             {
                 Health = 0;
@@ -33,9 +49,97 @@ namespace Solfège
             }
         }
 
+        // main update used during gameplay, requires metronome for beat timing
+        public void Update(GameTime gameTime, GamePadState gp, KeyboardState kb, Map map, MetronomeSystem metronome, WaveManager waveManager)
+        {
+            if (!IsAlive)
+            {
+                return;
+            }
+
+            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            Vector2 input = Vector2.Zero;
+
+            if (kb.IsKeyDown(Keys.W) || kb.IsKeyDown(Keys.Up)) input.Y = -1f;
+            if (kb.IsKeyDown(Keys.S) || kb.IsKeyDown(Keys.Down)) input.Y = 1f;
+            if (kb.IsKeyDown(Keys.A) || kb.IsKeyDown(Keys.Left)) input.X = -1f;
+            if (kb.IsKeyDown(Keys.D) || kb.IsKeyDown(Keys.Right)) input.X = 1f;
+
+            if (input.LengthSquared() > 1f)
+            {
+                input.Normalize();
+            }
+
+            Position += input * MoveSpeed * elapsed;
+
+            if (attackCooldown > 0f) attackCooldown -= elapsed;
+            if (attackFlash > 0f) attackFlash -= elapsed;
+
+            bool attackPressed =
+                (kb.IsKeyDown(Keys.Space) && !prevKb.IsKeyDown(Keys.Space)) ||
+                (kb.IsKeyDown(Keys.J) && !prevKb.IsKeyDown(Keys.J)) ||
+                gp.IsButtonDown(Microsoft.Xna.Framework.Input.Buttons.A);
+
+            if (attackPressed && attackCooldown <= 0f)
+            {
+                BeatRating rating = metronome.RegisterAction();
+                LastAttackRating = rating;
+                float damageMultiplier = metronome.GetDamageMultiplier(rating);
+                int finalDamage = (int)(BaseDamage * damageMultiplier);
+
+                float force = 80f;
+
+                if (rating == BeatRating.Perfect)
+                {
+                    force = 350f;
+                }
+                else if (rating == BeatRating.Good)
+                {
+                    force = 220f;
+                }
+
+                Vector2 center = Position + Size / 2f;
+
+                foreach (Enemy e in waveManager.Enemies)
+                {
+                    if (!e.IsAlive)
+                    {
+                        continue;
+                    }
+
+                    Vector2 enemyCenter = e.Position + e.Size / 2f;
+                    float dist = Vector2.Distance(center, enemyCenter);
+
+                    if (dist <= AttackRange)
+                    {
+                        Vector2 knockDir = enemyCenter - center;
+                        e.TakeDamage(finalDamage, knockDir, force);
+                    }
+                }
+
+                // fire a flute shockwave after 3 perfects in a row
+                if (metronome.ConsecutivePerfects > 0 && metronome.ConsecutivePerfects % 3 == 0)
+                {
+                    Flute.FireShockwave(center);
+                }
+
+                attackCooldown = AttackRate;
+                attackFlash = 0.12f;
+            }
+
+            Flute.Update(elapsed, waveManager.Enemies);
+
+            prevKb = kb;
+        }
+
+        // fallback update without combat, kept for early game states
         public void Update(GameTime gameTime, GamePadState gp, KeyboardState kb, Map map)
         {
-            if (!IsAlive) return;
+            if (!IsAlive)
+            {
+                return;
+            }
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
             Vector2 input = Vector2.Zero;
@@ -45,16 +149,28 @@ namespace Solfège
             if (kb.IsKeyDown(Keys.A) || kb.IsKeyDown(Keys.Left)) input.X = -1f;
             if (kb.IsKeyDown(Keys.D) || kb.IsKeyDown(Keys.Right)) input.X = 1f;
 
-            if (input.Length() > 1f)
+            if (input.LengthSquared() > 1f)
+            {
                 input.Normalize();
+            }
 
             Position += input * MoveSpeed * elapsed;
+            prevKb = kb;
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera camera, SpriteFont font)
         {
             Vector2 screenPos = Position - camera.Position;
-            spriteBatch.Draw(texture, screenPos, Color.White);
+            Color tint = Color.White;
+
+            if (attackFlash > 0f)
+            {
+                tint = Color.White * 1.8f;
+            }
+
+            spriteBatch.Draw(texture, screenPos, tint);
+
+            Flute.Draw(spriteBatch, camera, Position, Size);
         }
     }
 }
