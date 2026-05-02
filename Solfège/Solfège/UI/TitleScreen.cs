@@ -34,6 +34,7 @@ namespace Solfège
         public bool MetronomePulse { get; private set; } = true;
 
         public event Action OnStartGame;
+        public event Action OnNewGame;
         public event Action OnExitGame;
 
         public SpriteFont titleFont;
@@ -144,7 +145,15 @@ namespace Solfège
 
         private void ActivateMenu()
         {
-            if (menuIndex == 0)
+            if (menuIndex == 0) // New Performance
+            {
+                CurrentScreen = GameScreen.Playing;
+                if (OnNewGame != null)
+                {
+                    OnNewGame();
+                }
+            }
+            else if (menuIndex == 1) // Continue
             {
                 CurrentScreen = GameScreen.Playing;
                 if (OnStartGame != null)
@@ -152,16 +161,6 @@ namespace Solfège
                     OnStartGame();
                 }
             }
-
-            else if (menuIndex == 1)
-            {
-                CurrentScreen = GameScreen.Playing;
-                if (OnStartGame != null)
-                {
-                    OnStartGame();
-                }
-            }
-
             else if (menuIndex == 2)
             {
                 CurrentScreen = GameScreen.Settings;

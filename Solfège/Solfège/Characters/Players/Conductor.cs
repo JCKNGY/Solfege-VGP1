@@ -19,7 +19,8 @@ namespace Solfège
         public bool IsAlive = true;
 
         private float attackCooldown = 0f;
-        private const float AttackRate = 0.30f;
+        private const float AttackRate = 0.20f;
+
         public const float AttackRange = 180f;
 
         public BeatRating LastAttackRating { get; private set; } = BeatRating.None;
@@ -28,14 +29,15 @@ namespace Solfège
 
         private KeyboardState prevKb;
 
-        // the flute weapon fires a music note shockwave on 3 consecutive perfects
-        public FluteWeapon Flute;
+        // InstrumentSpell handles the 3-perfect counter and fires the shockwave
+        public InstrumentSpell Spell;
 
         public Conductor(ContentManager content, GraphicsDevice graphicsDevice)
         {
             texture = content.Load<Texture2D>("sprites/Character Sprite/ConductorFront");
-            Size = new Vector2(texture.Width, texture.Height);
-            Flute = new FluteWeapon(content);
+            Size = new Vector2(40, 60);
+
+            Spell = new InstrumentSpell(content);
         }
 
         public void TakeDamage(int amount)
@@ -49,7 +51,6 @@ namespace Solfège
             }
         }
 
-        // main update used during gameplay, requires metronome for beat timing
         public void Update(GameTime gameTime, GamePadState gp, KeyboardState kb, Map map, MetronomeSystem metronome, WaveManager waveManager)
         {
             if (!IsAlive)
@@ -81,65 +82,64 @@ namespace Solfège
                 (kb.IsKeyDown(Keys.J) && !prevKb.IsKeyDown(Keys.J)) ||
                 gp.IsButtonDown(Microsoft.Xna.Framework.Input.Buttons.A);
 
-            if (attackPressed && attackCooldown <= 0f)
+            if (attackPressed)
             {
+                // register the beat timing — never blocked by cooldown
                 BeatRating rating = metronome.RegisterAction();
                 LastAttackRating = rating;
-                float damageMultiplier = metronome.GetDamageMultiplier(rating);
-                int finalDamage = (int)(BaseDamage * damageMultiplier);
-
-                float force = 80f;
-
-                if (rating == BeatRating.Perfect)
-                {
-                    force = 350f;
-                }
-                else if (rating == BeatRating.Good)
-                {
-                    force = 220f;
-                }
 
                 Vector2 center = Position + Size / 2f;
 
-                foreach (Enemy e in waveManager.Enemies)
+                // InstrumentSpell tracks consecutive perfects and fires the shockwave at 3
+                Spell.ProcessHit(rating, center, waveManager);
+
+                if (attackCooldown <= 0f)
                 {
-                    if (!e.IsAlive)
+                    float damageMultiplier = metronome.GetDamageMultiplier(rating);
+                    int finalDamage = (int)(BaseDamage * damageMultiplier);
+
+                    float force = 80f;
+
+                    if (rating == BeatRating.Perfect)
                     {
-                        continue;
+                        force = 350f;
+                    }
+                    else if (rating == BeatRating.Good)
+                    {
+                        force = 220f;
                     }
 
-                    Vector2 enemyCenter = e.Position + e.Size / 2f;
-                    float dist = Vector2.Distance(center, enemyCenter);
-
-                    if (dist <= AttackRange)
+                    foreach (Enemy e in waveManager.Enemies)
                     {
-                        Vector2 knockDir = enemyCenter - center;
-                        e.TakeDamage(finalDamage, knockDir, force);
+                        if (!e.IsAlive)
+                        {
+                            continue;
+                        }
+
+                        Vector2 enemyCenter = e.Position + e.Size / 2f;
+                        float dist = Vector2.Distance(center, enemyCenter);
+
+                        if (dist <= AttackRange)
+                        {
+                            Vector2 knockDir = enemyCenter - center;
+                            e.TakeDamage(finalDamage, knockDir, force);
+                        }
                     }
-                }
 
-                // fire a flute shockwave after 3 perfects in a row
-                if (metronome.ConsecutivePerfects > 0 && metronome.ConsecutivePerfects % 3 == 0)
-                {
-                    Flute.FireShockwave(center);
+                    attackCooldown = AttackRate;
+                    attackFlash = 0.12f;
                 }
-
-                attackCooldown = AttackRate;
-                attackFlash = 0.12f;
             }
 
-            Flute.Update(elapsed, waveManager.Enemies);
+            Spell.Update(gameTime);
 
             prevKb = kb;
         }
 
-        // fallback update without combat, kept for early game states
         public void Update(GameTime gameTime, GamePadState gp, KeyboardState kb, Map map)
         {
             if (!IsAlive)
-            {
                 return;
-            }
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
             Vector2 input = Vector2.Zero;
@@ -150,27 +150,30 @@ namespace Solfège
             if (kb.IsKeyDown(Keys.D) || kb.IsKeyDown(Keys.Right)) input.X = 1f;
 
             if (input.LengthSquared() > 1f)
-            {
                 input.Normalize();
-            }
 
             Position += input * MoveSpeed * elapsed;
+
+            Spell.Update(gameTime); 
+
             prevKb = kb;
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera camera, SpriteFont font)
         {
-            Vector2 screenPos = Position - camera.Position;
-            Color tint = Color.White;
+            // Center the large sprite on the small hitbox
+            Vector2 spriteOffset = new Vector2(
+                (Size.X - texture.Width) / 2f,
+                (Size.Y - texture.Height) / 2f
+            );
+            Vector2 screenPos = Position + spriteOffset - camera.Position;
 
+            Color tint = Color.White;
             if (attackFlash > 0f)
-            {
                 tint = Color.White * 1.8f;
-            }
 
             spriteBatch.Draw(texture, screenPos, tint);
-
-            Flute.Draw(spriteBatch, camera, Position, Size);
+            Spell.Draw(spriteBatch, camera, Position, Size);
         }
     }
 }

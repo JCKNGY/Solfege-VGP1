@@ -79,12 +79,13 @@ namespace Solfège
             titleScreen = new TitleScreen(GraphicsDevice, titleFont, menuFont, font, Content);
 
             titleScreen.OnStartGame += StartGame;
-            titleScreen.OnExitGame += () => this.Exit();
+            titleScreen.OnNewGame += NewGame;
+            titleScreen.OnExitGame += ExitGame;
 
             map = new Map(Content, GraphicsDevice);
             camera = new Camera(ScreenWidth, ScreenHeight, map.MapWidthPixels, map.MapHeightPixels);
             Conductor = new Conductor(Content, GraphicsDevice);
-            metronome = new MetronomeSystem(Content, GraphicsDevice, 240);
+            metronome = new MetronomeSystem(Content, GraphicsDevice);
             waveManager = new WaveManager(GraphicsDevice);
 
             Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
@@ -110,7 +111,24 @@ namespace Solfège
             ApplyAudioSettings();
             MediaPlayer.Play(gameMusic);
         }
-        
+        private void NewGame()
+        {
+            currentScreen = GameScreen.Playing;
+            Conductor.Health = Conductor.MaxHealth;
+            Conductor.IsAlive = true;
+            Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
+            waveManager = new WaveManager(GraphicsDevice);
+            metronome.ResetStreak();
+            waveManager.StartNextWave(Conductor.Position);
+            ApplyAudioSettings();
+            MediaPlayer.Play(gameMusic);
+        }
+
+        private void ExitGame()
+        {
+            this.Exit();
+        }
+
         private void ApplyAudioSettings()
         {
             if (titleScreen == null) return;
@@ -144,11 +162,11 @@ namespace Solfège
                 }
                 else
                 {
-                    Conductor.Update(gameTime, gp, kb, map);
+                    Conductor.Update(gameTime, gp, kb, map, metronome, waveManager);
                     camera.Update(Conductor.Position, Conductor.Size);
                     metronome.Update(gameTime, Conductor);
-
-                    waveManager.Update(gameTime, Conductor.Position, Conductor);
+                    System.Diagnostics.Debug.WriteLine("Conductor Size: " + Conductor.Size + " Center: " + (Conductor.Position + Conductor.Size / 2f));
+                    waveManager.Update(gameTime, Conductor.Position + Conductor.Size / 2f, Conductor);
                     if (!waveManager.WaveActive)
                     {
                         waveManager.StartNextWave(Conductor.Position);
@@ -174,6 +192,7 @@ namespace Solfège
                     Conductor.IsAlive = true;
                     Conductor.Position = new Vector2(map.MapWidthPixels / 2f, map.MapHeightPixels / 2f);
                     waveManager = new WaveManager(GraphicsDevice);
+                    metronome.ResetStreak();
                     MediaPlayer.Play(titleMusic);
                 }
             }

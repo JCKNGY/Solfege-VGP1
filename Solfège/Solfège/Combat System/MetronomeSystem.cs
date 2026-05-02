@@ -32,13 +32,13 @@ namespace Solfège
         SoundEffect heartbeatSfx;
 
         // change this value to set the song tempo
-        public double BPM { get; private set; } = 104;
+        public double BPM = 59;
         double SPB;
         double beatTimer;
 
-        // how close to the beat the player needs to be
-        const double PerfectWindow = 0.080;
-        const double GoodWindow = 0.160;
+        // how wide the perfect zone is in seconds on each side of the beat
+        const double PerfectWindow = 0.150;
+        const double GoodWindow = 0.250;
 
         public int Streak { get; private set; } = 0;
         public int BestStreak { get; private set; } = 0;
@@ -61,7 +61,7 @@ namespace Solfège
 
         int screenW, screenH;
 
-        public MetronomeSystem(ContentManager content, GraphicsDevice gd, int bpm = 104)
+        public MetronomeSystem(ContentManager content, GraphicsDevice gd)
         {
             screenW = gd.Viewport.Width;
             screenH = gd.Viewport.Height;
@@ -86,22 +86,21 @@ namespace Solfège
             pixel = new Texture2D(gd, 1, 1);
             pixel.SetData(new[] { Color.White });
 
-            BPM = bpm;
             SPB = 60.0 / BPM;
             beatTimer = 0;
         }
 
-        // call this when the player attacks to get their timing rating
         public BeatRating RegisterAction()
         {
-            double distToNearest = Math.Min(beatTimer, SPB - beatTimer);
+            double halfSPB = SPB / 2.0;
+            double distToMiddle = Math.Abs(beatTimer - halfSPB);
 
-            if (distToNearest <= PerfectWindow)
+            if (distToMiddle <= PerfectWindow)
             {
                 ApplyRating(BeatRating.Perfect);
                 return BeatRating.Perfect;
             }
-            else if (distToNearest <= GoodWindow)
+            else if (distToMiddle <= GoodWindow)
             {
                 ApplyRating(BeatRating.Good);
                 return BeatRating.Good;
@@ -113,7 +112,7 @@ namespace Solfège
             }
         }
 
-        // multiply base damage by this value after registering an action
+
         public float GetDamageMultiplier(BeatRating rating)
         {
             float baseMulti = 1.0f;
@@ -241,7 +240,7 @@ namespace Solfège
             }
         }
 
-        private void DrawBeatBar(SpriteBatch spriteBatch)
+        public void DrawBeatBar(SpriteBatch spriteBatch)
         {
             int bx = barBg.X;
             int by = barBg.Y;
@@ -250,27 +249,26 @@ namespace Solfège
 
             spriteBatch.Draw(pixel, barBg, Color.Black * 0.65f);
 
-            // gold and green zones show where perfect and good windows are
+            int centerX = bx + bw / 2;
             int perfectPx = (int)(PerfectWindow / SPB * bw);
             int goodPx = (int)(GoodWindow / SPB * bw);
 
-            spriteBatch.Draw(pixel, new Rectangle(bx, by, goodPx, bh), GoodColor * 0.30f);
-            spriteBatch.Draw(pixel, new Rectangle(bx, by, perfectPx, bh), PerfectColor * 0.45f);
-            spriteBatch.Draw(pixel, new Rectangle(bx + bw - goodPx, by, goodPx, bh), GoodColor * 0.30f);
-            spriteBatch.Draw(pixel, new Rectangle(bx + bw - perfectPx, by, perfectPx, bh), PerfectColor * 0.45f);
+            // Draw Good zone centered
+            spriteBatch.Draw(pixel, new Rectangle(centerX - goodPx, by, goodPx * 2, bh), GoodColor * 0.30f);
+            // Draw Perfect zone centered (on top)
+            spriteBatch.Draw(pixel, new Rectangle(centerX - perfectPx, by, perfectPx * 2, bh), PerfectColor * 0.45f);
 
+            // Cursor still sweeps left to right
             float phase = (float)(beatTimer / SPB);
             int cursorX = bx + (int)(phase * bw);
             float brightness = 0.70f + beatPulse * 0.30f;
-
             spriteBatch.Draw(pixel, new Rectangle(cursorX - 2, by - 3, 4, bh + 6), Color.White * brightness);
 
+            // border
             spriteBatch.Draw(pixel, new Rectangle(bx, by, bw, 2), Color.White * 0.80f);
             spriteBatch.Draw(pixel, new Rectangle(bx, by + bh - 2, bw, 2), Color.White * 0.80f);
             spriteBatch.Draw(pixel, new Rectangle(bx, by, 2, bh), Color.White * 0.80f);
             spriteBatch.Draw(pixel, new Rectangle(bx + bw - 2, by, 2, bh), Color.White * 0.80f);
-
-            spriteBatch.DrawString(font, $"{(int)BPM} BPM", new Vector2(bx + bw + 10, by + 2), Color.White * 0.65f);
         }
 
         private void DrawHeart(SpriteBatch spriteBatch)
@@ -334,6 +332,15 @@ namespace Solfège
 
             Vector2 sz = font.MeasureString(text);
             spriteBatch.DrawString(font, text, new Vector2(screenW / 2f - sz.X / 2f, barBg.Y - 60 + offsetY), color * alpha);
+        }
+
+        public void ResetStreak()
+        {
+            Streak = 0;
+            BestStreak = 0;
+            ComboMultiplier = 1;
+            ConsecutivePerfects = 0;
+            LastRating = BeatRating.None;
         }
     }
 }

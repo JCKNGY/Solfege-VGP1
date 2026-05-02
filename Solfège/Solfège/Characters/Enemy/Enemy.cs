@@ -148,7 +148,7 @@ namespace Solfège
             }
 
 
-            Vector2 direction = playerPosition - Position;
+            Vector2 direction = playerPosition - (Position + Size / 2f);
             float dist = direction.Length();
 
 
