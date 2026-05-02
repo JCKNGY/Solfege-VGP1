@@ -29,7 +29,6 @@ namespace Solfège
 
         private KeyboardState prevKb;
 
-        // InstrumentSpell handles the 3-perfect counter and fires the shockwave
         public InstrumentSpell Spell;
 
         public Conductor(ContentManager content, GraphicsDevice graphicsDevice)
@@ -84,13 +83,11 @@ namespace Solfège
 
             if (attackPressed)
             {
-                // register the beat timing — never blocked by cooldown
                 BeatRating rating = metronome.RegisterAction();
                 LastAttackRating = rating;
 
                 Vector2 center = Position + Size / 2f;
 
-                // InstrumentSpell tracks consecutive perfects and fires the shockwave at 3
                 Spell.ProcessHit(rating, center, waveManager);
 
                 if (attackCooldown <= 0f)
@@ -161,7 +158,6 @@ namespace Solfège
 
         public void Draw(SpriteBatch spriteBatch, Camera camera, SpriteFont font)
         {
-            // Center the large sprite on the small hitbox
             Vector2 spriteOffset = new Vector2(
                 (Size.X - texture.Width) / 2f,
                 (Size.Y - texture.Height) / 2f

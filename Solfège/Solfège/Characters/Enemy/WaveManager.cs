@@ -102,7 +102,7 @@ namespace Solfège
                     shockwaves.Add(new Shockwave(e.Position, 80f, 0.5f));
                 }
 
-                // use the conductor hitbox so contact triggers on the visible body only
+
                 int contactDmg = e.CheckContactDamage(conductor.Position, conductor.Size);
                 if (contactDmg > 0)
                 {
@@ -159,7 +159,7 @@ namespace Solfège
                 }
             }
 
-            // let the instrument spell notes check for enemy hits each frame
+
             conductor.Spell.UpdateWithEnemies(gameTime, enemies);
 
             if (WaveActive && spawnedThisWave >= enemiesToSpawn && enemies.Count == 0)

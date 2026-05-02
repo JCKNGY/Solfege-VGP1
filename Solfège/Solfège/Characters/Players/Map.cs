@@ -28,7 +28,7 @@ namespace Solfège
             {
                 for (int x = 0; x < TileWidth; x++)
                 {
-                    // Dark border, light gray interior
+
                     bool isBorder = (x == 0 || y == 0 || x == TileWidth - 1 || y == TileHeight - 1);
                     pixels[y * TileWidth + x] = isBorder ? new Color(150, 150, 150) : new Color(220, 220, 220);
                 }

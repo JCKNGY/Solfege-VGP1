@@ -103,7 +103,6 @@ namespace Solfège
             MediaPlayer.Volume = 1f;
             MediaPlayer.Play(titleMusic);
         }
-        //Set everything to standard
         private void StartGame()
         {
             currentScreen = GameScreen.Playing;
@@ -302,7 +301,6 @@ namespace Solfège
 
             base.Draw(gameTime);
         }
-        //Just pop out the pause menu when esc is pressed.
         private void DrawPauseOverlay(SpriteBatch sb)
         {
             sb.Draw(pixel, new Rectangle(0, 0, ScreenWidth, ScreenHeight), Color.Black * 0.60f);
@@ -375,7 +373,6 @@ namespace Solfège
             }
         }
 
-        //Basically the Line under the main logo
         private void DrawHorizontalRule(SpriteBatch sb, Vector2 center, int halfWidth, float alpha)
         {
             int thickness = 1;

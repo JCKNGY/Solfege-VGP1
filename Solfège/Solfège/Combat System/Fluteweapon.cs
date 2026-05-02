@@ -51,7 +51,7 @@ namespace Solfège
             }
         }
 
-        // returns true if this note hit an enemy and deals damage
+
         public bool CheckEnemyHit(Enemy e)
         {
             if (!IsAlive || !e.IsAlive)
@@ -93,7 +93,7 @@ namespace Solfège
 
         public List<MusicNoteProjectile> Notes = new List<MusicNoteProjectile>();
 
-        // how many notes fire outward in one shockwave ring
+
         const int NotesPerShockwave = 12;
 
         // orbit settings
@@ -101,7 +101,7 @@ namespace Solfège
         const float OrbitSpeed = 2.5f;
         float orbitAngle = 0f;
 
-        // flute drawn at this size
+
         const int FluteSize = 56;
 
         public FluteWeapon(ContentManager content)
@@ -110,7 +110,7 @@ namespace Solfège
             noteSprite = content.Load<Texture2D>("sprites/Projectiles/2Eights");
         }
 
-        // fires notes outward in a full circle — triggered by 3 consecutive perfects
+
         public void FireShockwave(Vector2 origin)
         {
             for (int i = 0; i < NotesPerShockwave; i++)
@@ -143,7 +143,7 @@ namespace Solfège
 
         public void Draw(SpriteBatch spriteBatch, Camera camera, Vector2 playerPos, Vector2 playerSize)
         {
-            // flute orbits and spins around the player center
+
             Vector2 playerCenter = playerPos + playerSize / 2f;
             float px = playerCenter.X + (float)Math.Cos(orbitAngle) * OrbitRadius;
             float py = playerCenter.Y + (float)Math.Sin(orbitAngle) * OrbitRadius;

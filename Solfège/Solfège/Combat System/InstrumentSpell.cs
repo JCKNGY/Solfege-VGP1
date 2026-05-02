@@ -15,7 +15,7 @@ namespace Solfège
 
         public int perfectHitCount = 0;
 
-        // orbit state for the flute visual
+
         float orbitAngle = 0f;
         const float OrbitRadius = 150f;
         const float OrbitSpeed = 2.8f;
@@ -27,7 +27,7 @@ namespace Solfège
             noteSprite = content.Load<Texture2D>("sprites/Projectiles/2Eights");
         }
 
-        // call this every time the player presses attack with the beat rating result
+
         public void ProcessHit(BeatRating rating, Vector2 pos, WaveManager wave)
         {
             System.Diagnostics.Debug.WriteLine($"Hit: {rating}, count before: {perfectHitCount}");
@@ -51,7 +51,7 @@ namespace Solfège
             }
         }
 
-        // adds a visible expanding shockwave ring and 8 outward-flying notes
+
         public void SpawnMusicBlast(Vector2 pos, WaveManager wave)
         {
             wave.shockwaves.Add(new Shockwave(pos, 300f, 1.0f));
@@ -66,14 +66,14 @@ namespace Solfège
             }
         }
 
-        // called from Conductor each frame to advance the orbit angle
+
         public void Update(GameTime gameTime)
         {
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
             orbitAngle += OrbitSpeed * elapsed;
         }
 
-        // call this from WaveManager so notes check enemy hits each frame
+ 
         public void UpdateWithEnemies(GameTime gameTime, List<Enemy> enemies)
         {
             for (int i = activeNotes.Count - 1; i >= 0; i--)

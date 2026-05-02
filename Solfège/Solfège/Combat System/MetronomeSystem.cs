@@ -31,12 +31,10 @@ namespace Solfège
         SpriteFont font;
         SoundEffect heartbeatSfx;
 
-        // change this value to set the song tempo
         public double BPM = 59;
         double SPB;
         double beatTimer;
 
-        // how wide the perfect zone is in seconds on each side of the beat
         const double PerfectWindow = 0.150;
         const double GoodWindow = 0.250;
 
@@ -44,7 +42,6 @@ namespace Solfège
         public int BestStreak { get; private set; } = 0;
         public int ComboMultiplier { get; private set; } = 1;
 
-        // counts consecutive perfects, resets on anything less
         public int ConsecutivePerfects { get; private set; } = 0;
 
         public BeatRating LastRating { get; private set; } = BeatRating.None;
@@ -220,7 +217,6 @@ namespace Solfège
                     BestStreak = Streak;
                 }
 
-                // multiplier tiers go up at 5, 10, and 20 streak
                 if (Streak >= 20)
                 {
                     ComboMultiplier = 4;
@@ -253,18 +249,14 @@ namespace Solfège
             int perfectPx = (int)(PerfectWindow / SPB * bw);
             int goodPx = (int)(GoodWindow / SPB * bw);
 
-            // Draw Good zone centered
             spriteBatch.Draw(pixel, new Rectangle(centerX - goodPx, by, goodPx * 2, bh), GoodColor * 0.30f);
-            // Draw Perfect zone centered (on top)
             spriteBatch.Draw(pixel, new Rectangle(centerX - perfectPx, by, perfectPx * 2, bh), PerfectColor * 0.45f);
 
-            // Cursor still sweeps left to right
             float phase = (float)(beatTimer / SPB);
             int cursorX = bx + (int)(phase * bw);
             float brightness = 0.70f + beatPulse * 0.30f;
             spriteBatch.Draw(pixel, new Rectangle(cursorX - 2, by - 3, 4, bh + 6), Color.White * brightness);
 
-            // border
             spriteBatch.Draw(pixel, new Rectangle(bx, by, bw, 2), Color.White * 0.80f);
             spriteBatch.Draw(pixel, new Rectangle(bx, by + bh - 2, bw, 2), Color.White * 0.80f);
             spriteBatch.Draw(pixel, new Rectangle(bx, by, 2, bh), Color.White * 0.80f);
